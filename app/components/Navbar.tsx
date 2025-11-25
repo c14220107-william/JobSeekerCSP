@@ -1,12 +1,47 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { getUserData, logoutUser, isUserLoggedIn } from '@/app/apiServices';
 
 const NavbarComponent = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState<{ full_name: string; email: string } | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkUser = () => {
+      if (isUserLoggedIn()) {
+        const userData = getUserData();
+        console.log('Navbar - User data from localStorage:', userData);
+        setUser(userData);
+      } else {
+        setUser(null);
+      }
+    };
+
+    checkUser();
+
+    // Set up interval to check for user changes
+    const interval = setInterval(checkUser, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      setUser(null);
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still clear local data even if API fails
+      setUser(null);
+      router.push('/');
+    }
+  };
 
   // Function untuk scroll ke about section
   const scrollToAbout = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -70,25 +105,37 @@ const NavbarComponent = () => {
       </div>
 
       <div className="hidden md:flex items-center gap-2 ">
-        <a
-          href="https://github.com/Crisnanda18"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex flex-row gap-2 items-center !bg-[#FF851A] hover:bg-orange-600 !text-black  px-4 py-2 rounded transition duration-300 font-bold"
-        >
-          Log In
-        </a>
-        <a
-          href="https://github.com/Crisnanda18"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex flex-row gap-2 items-center !bg-[#ffffff] hover:bg-orange-600 !text-black  px-4 py-2 rounded transition duration-300 font-bold"
-        >
-          Sign Up
-        </a>
+        {user ? (
+          <>
+            <span className="text-white font-semibold mr-2">
+              Welcome, {user.full_name}
+            </span>
+            <button
+              onClick={handleLogout}
+              className="flex flex-row gap-2 items-center !bg-[#FF851A] hover:bg-orange-600 !text-black  px-4 py-2 rounded transition duration-300 font-bold"
+            >
+              Log Out
+            </button>
+          </>
+        ) : (
+          <>
+            <Link
+              href="/login/user"
+              className="flex flex-row gap-2 items-center !bg-[#FF851A] hover:bg-orange-600 !text-black  px-4 py-2 rounded transition duration-300 font-bold"
+            >
+              Log In
+            </Link>
+            <Link
+              href="/login/user"
+              className="flex flex-row gap-2 items-center !bg-[#ffffff] hover:bg-orange-600 !text-black  px-4 py-2 rounded transition duration-300 font-bold"
+            >
+              Sign Up
+            </Link>
+          </>
+        )}
       </div>
 
-      
+
 
       {/* Mobile Menu Button */}
       <button
@@ -163,26 +210,36 @@ const NavbarComponent = () => {
             </a>
 
             <div className="flex gap-4 mt-4">
-              <a
-                href="https://github.com/Crisnanda18"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-row gap-2 items-center !bg-[#FF851A] hover:bg-orange-600 !text-black !font-semibold px-4 py-1 rounded transition duration-300"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                
-                Log In
-              </a>
-              <a
-                href="https://github.com/Crisnanda18"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-row gap-2 items-center !bg-[#ffffff] hover:bg-orange-600 !text-black !font-semibold px-4 py-1 rounded transition duration-300"
-                onClick={() => setIsMenuOpen(false)}
-              >
-
-                Sign Up
-              </a>
+              {user ? (
+                <>
+                  <span className="text-white font-semibold">
+                    Welcome, {user.full_name}
+                  </span>
+                  <button
+                    onClick={handleLogout}
+                    className="flex flex-row gap-2 items-center !bg-[#FF851A] hover:bg-orange-600 !text-black !font-semibold px-4 py-1 rounded transition duration-300"
+                  >
+                    Log Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login/user"
+                    className="flex flex-row gap-2 items-center !bg-[#FF851A] hover:bg-orange-600 !text-black !font-semibold px-4 py-1 rounded transition duration-300"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    href="/login/user"
+                    className="flex flex-row gap-2 items-center !bg-[#ffffff] hover:bg-orange-600 !text-black !font-semibold px-4 py-1 rounded transition duration-300"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

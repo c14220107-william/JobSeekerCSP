@@ -2,12 +2,16 @@
 
 import Image from "next/image"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { loginUser, registerUser, saveUserData } from "@/app/apiServices"
 
 export default function UserLoginPage() {
+    const router = useRouter()
     const [isLogin, setIsLogin] = useState(true)
     const [loginData, setLoginData] = useState({ email: '', password: '' })
-    const [registerData, setRegisterData] = useState({ name: '', email: '', password: '' })
+    const [registerData, setRegisterData] = useState({ full_name: '', email: '', password: '' })
     const [errors, setErrors] = useState<{ [key: string]: string }>({})
+    const [isLoading, setIsLoading] = useState(false)
 
     const validateEmail = (email: string) => {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -36,10 +40,10 @@ export default function UserLoginPage() {
     const validateRegisterForm = () => {
         const newErrors: { [key: string]: string } = {}
 
-        if (!registerData.name) {
-            newErrors.name = 'Name is required'
-        } else if (registerData.name.length < 2) {
-            newErrors.name = 'Name must be at least 2 characters'
+        if (!registerData.full_name) {
+            newErrors.full_name = 'Name is required'
+        } else if (registerData.full_name.length < 2) {
+            newErrors.full_name = 'Name must be at least 2 characters'
         }
 
         if (!registerData.email) {
@@ -58,19 +62,79 @@ export default function UserLoginPage() {
         return Object.keys(newErrors).length === 0
     }
 
-    const handleLoginSubmit = (e: React.FormEvent) => {
+    const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (validateLoginForm()) {
-            console.log('Login data:', loginData)
-            // Handle login logic here
+            setIsLoading(true)
+            setErrors({}) // Clear previous errors
+            try {
+                const response = await loginUser(loginData.email, loginData.password)
+
+                console.log('Login response:', response)
+
+                // Extract data from response
+                const userData = response.data || response
+                const user = userData.user
+                const profile = user?.profile
+                const token = userData.access_token || response.access_token
+
+                // Save user data with profile info to localStorage
+                saveUserData({
+                    full_name: profile?.full_name || '',
+                    email: user?.email || '',
+                    token: token,
+                    user_id: user?.id
+                })
+
+                // Redirect to home
+                router.push('/')
+            } catch (error) {
+                setErrors({
+                    general: error instanceof Error ? error.message : 'Login failed. Please try again.'
+                })
+            } finally {
+                setIsLoading(false)
+            }
         }
     }
 
-    const handleRegisterSubmit = (e: React.FormEvent) => {
+    const handleRegisterSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (validateRegisterForm()) {
-            console.log('Register data:', registerData)
-            // Handle register logic here
+            setIsLoading(true)
+            setErrors({}) // Clear previous errors
+            try {
+                const response = await registerUser(
+                    registerData.full_name,
+                    registerData.email,
+                    registerData.password
+                )
+
+                console.log('Register response:', response)
+
+                // Extract data from response
+                const userData = response.data || response
+                const profile = userData.profile
+                const user = userData.user
+                const token = userData.access_token || response.access_token
+
+                // Save user data with profile info to localStorage
+                saveUserData({
+                    full_name: profile?.full_name || registerData.full_name,
+                    email: user?.email || registerData.email,
+                    token: token,
+                    user_id: user?.id
+                })
+
+                // Redirect to home
+                router.push('/')
+            } catch (error) {
+                setErrors({
+                    general: error instanceof Error ? error.message : 'Registration failed. Please try again.'
+                })
+            } finally {
+                setIsLoading(false)
+            }
         }
     }
 
@@ -83,7 +147,7 @@ export default function UserLoginPage() {
     const switchToLogin = () => {
         setIsLogin(true)
         setErrors({})
-        setRegisterData({ name: '', email: '', password: '' })
+        setRegisterData({ full_name: '', email: '', password: '' })
     }
 
     return <div className="login-bg min-h-screen grid grid-cols-2 place-items-center">
@@ -109,6 +173,11 @@ export default function UserLoginPage() {
                 >
 
                     <form onSubmit={handleLoginSubmit} className="space-y-4">
+                        {errors.general && (
+                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                                {errors.general}
+                            </div>
+                        )}
                         <div>
                             <label htmlFor="login-email" className="block text-white mb-2 font-medium">
                                 Email
@@ -141,9 +210,10 @@ export default function UserLoginPage() {
 
                         <button
                             type="submit"
-                            className="w-full bg-white text-gray-900 font-bold py-3 rounded-lg transition-all duration-300 hover:shadow-2xl hover:shadow-white/50 hover:-translate-y-1 active:translate-y-0 active:shadow-lg mt-6"
+                            disabled={isLoading}
+                            className="w-full bg-white text-gray-900 font-bold py-3 rounded-lg transition-all duration-300 hover:shadow-2xl hover:shadow-white/50 hover:-translate-y-1 active:translate-y-0 active:shadow-lg mt-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                         >
-                            Log In
+                            {isLoading ? 'Logging in...' : 'Log In'}
                         </button>
 
                         <p className="text-center text-white/70 mt-4">
@@ -168,6 +238,11 @@ export default function UserLoginPage() {
                 >
 
                     <form onSubmit={handleRegisterSubmit} className="space-y-4">
+                        {errors.general && (
+                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                                {errors.general}
+                            </div>
+                        )}
                         <div>
                             <label htmlFor="register-name" className="block text-white mb-2 font-medium">
                                 Name
@@ -175,8 +250,8 @@ export default function UserLoginPage() {
                             <input
                                 id="register-name"
                                 type="text"
-                                value={registerData.name}
-                                onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
+                                value={registerData.full_name}
+                                onChange={(e) => setRegisterData({ ...registerData, full_name: e.target.value })}
                                 className="w-full px-4 py-3 rounded-lg bg-white border-2 border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-600 transition-all"
                                 placeholder="Enter your name"
                             />
@@ -215,9 +290,10 @@ export default function UserLoginPage() {
 
                         <button
                             type="submit"
-                            className="w-full bg-white text-gray-900 font-bold py-3 rounded-lg transition-all duration-300 hover:shadow-2xl hover:shadow-white/50 hover:-translate-y-1 active:translate-y-0 active:shadow-lg mt-6"
+                            disabled={isLoading}
+                            className="w-full bg-white text-gray-900 font-bold py-3 rounded-lg transition-all duration-300 hover:shadow-2xl hover:shadow-white/50 hover:-translate-y-1 active:translate-y-0 active:shadow-lg mt-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                         >
-                            Register
+                            {isLoading ? 'Registering...' : 'Register'}
                         </button>
 
                         <p className="text-center text-white/70 mt-4">
