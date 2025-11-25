@@ -13,6 +13,7 @@ body,
 body,
 .font-sans {
   font-family: 'Source Sans Pro', ui-sans-serif, system-ui, sans-serif !important;
+  overflow-x: hidden  !important;
 }
 
 .sora,
@@ -23,6 +24,11 @@ body,
 .landing-bg {
   background-image: url('/bg-polos.png');
   background-size: 105%; 
+}
+
+.login-bg {
+  background-image: url('/bg-polos.png');
+  background-size: 105%;
 }
 
 @media (min-width: 768px) {
