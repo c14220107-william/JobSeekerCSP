@@ -187,3 +187,28 @@ export const updateUserProfile = async (formData: FormData) => {
         throw error;
     }
 };
+
+// Get user profile
+export const getUserProfile = async () => {
+    const token = getToken();
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/user/profile`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to fetch profile');
+        }
+
+        return data;
+    } catch (error) {
+        throw error;
+    }
+};
