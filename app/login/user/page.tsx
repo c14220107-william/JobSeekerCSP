@@ -160,9 +160,8 @@ export default function UserLoginPage() {
                     type: 'success'
                 })
 
-                // Redirect to jobs page after delay to show toast
                 setTimeout(() => {
-                    router.push('/jobs')
+                    router.push('/profile')
                 }, 1500)
             } catch (error) {
                 setToast({

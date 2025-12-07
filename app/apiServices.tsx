@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://192.168.1.8:8000/api';
+const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 // Types
 interface UserData {
@@ -157,4 +157,33 @@ export const logoutUser = async () => {
 // Check if user is logged in
 export const isUserLoggedIn = () => {
     return getUserData() !== null;
+};
+
+// Update user profile
+export const updateUserProfile = async (formData: FormData) => {
+    const token = getToken();
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/user/profile`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+            body: formData,
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            if (data.errors) {
+                const firstError = Object.values(data.errors)[0];
+                throw new Error(Array.isArray(firstError) ? firstError[0] : firstError as string);
+            }
+            throw new Error(data.message || 'Update profile failed');
+        }
+
+        return data;
+    } catch (error) {
+        throw error;
+    }
 };
