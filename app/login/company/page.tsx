@@ -99,6 +99,11 @@ export default function UserLoginPage() {
                 const company = user?.company
                 const token = userData.access_token || response.access_token
 
+                // Validate that this is a company account (not regular user)
+                if (user?.role !== 'company') {
+                    throw new Error('This email is not registered as a company account. Please use the user login page.')
+                }
+
                 // Save company data to localStorage
                 saveUserData({
                     full_name: company?.name || '',
@@ -231,6 +236,7 @@ export default function UserLoginPage() {
     return <div className="company-bg min-h-screen grid grid-cols-2 place-items-center">
         {/* Toast Notification */}
         <Toast
+            key={toast.show ? Date.now() : 'toast'}
             show={toast.show}
             message={toast.message}
             type={toast.type}

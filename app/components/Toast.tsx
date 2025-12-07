@@ -1,37 +1,55 @@
 'use client'
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface ToastProps {
     show: boolean;
     message: string;
     type: 'success' | 'error' | 'warning';
     onClose: () => void;
+    key?: string | number;
 }
 
 export default function Toast({ show, message, type, onClose }: ToastProps) {
     const [progress, setProgress] = useState(100);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
-        if (show) {
-            setProgress(100);
-            const duration = 3000;
-            const interval = 30;
-            const step = (100 / duration) * interval;
-
-            const timer = setInterval(() => {
-                setProgress(prev => {
-                    if (prev <= 0) {
-                        clearInterval(timer);
-                        onClose();
-                        return 0;
-                    }
-                    return prev - step;
-                });
-            }, interval);
-
-            return () => clearInterval(timer);
+        if (!show) {
+            // Clean up timer when toast is hidden
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+            }
+            return;
         }
+
+        // Start countdown timer
+        const duration = 3000;
+        const interval = 30;
+        const step = (100 / duration) * interval;
+
+        timerRef.current = setInterval(() => {
+            setProgress(prev => {
+                const nextProgress = prev - step;
+                if (nextProgress <= 0) {
+                    if (timerRef.current) {
+                        clearInterval(timerRef.current);
+                        timerRef.current = null;
+                    }
+                    onClose();
+                    return 0;
+                }
+                return nextProgress;
+            });
+        }, interval);
+
+        return () => {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+            }
+        };
     }, [show, onClose]);
 
     if (!show) return null;
@@ -47,7 +65,7 @@ export default function Toast({ show, message, type, onClose }: ToastProps) {
     return (
         <div className={`fixed top-4 right-4 z-50 min-w-[320px] max-w-md animate-slideIn ${bgColor} border-l-4 rounded-lg shadow-2xl overflow-hidden`}>
             <div className="flex items-start p-4">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                     {type === 'success' && (
                         <svg className={`w-6 h-6 ${iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -67,7 +85,7 @@ export default function Toast({ show, message, type, onClose }: ToastProps) {
                 <div className="ml-3 w-0 flex-1 pt-0.5">
                     <p className="text-sm font-medium text-gray-900">{message}</p>
                 </div>
-                <div className="ml-4 flex-shrink-0 flex">
+                <div className="ml-4 shrink-0 flex">
                     <button
                         onClick={onClose}
                         className="inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
