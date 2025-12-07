@@ -3,9 +3,23 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { logoutUser } from '@/app/apiServices';
 
 export default function CompanyNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still redirect even if API fails
+      router.push('/');
+    }
+  };
 
   return (
     <nav className="w-full fixed bg-black px-4 md:px-8 py-3 flex items-center justify-between z-50">
@@ -36,9 +50,10 @@ export default function CompanyNavbar() {
         >
           Create Job
         </Link>
-        
+
         {/* TODO: Add Logout button when auth is ready */}
         <button
+          onClick={handleLogout}
           className="bg-red-600 hover:bg-red-700 hover:scale-105 text-white px-6 py-2 rounded-lg font-sans font-semibold transition-all duration-200"
         >
           Logout
@@ -91,8 +106,9 @@ export default function CompanyNavbar() {
           >
             Create Job
           </Link>
-          
+
           <button
+            onClick={handleLogout}
             className="w-full text-left bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-sans font-semibold transition-colors duration-200"
           >
             Logout

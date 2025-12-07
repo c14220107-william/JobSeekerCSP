@@ -230,7 +230,7 @@ const NavbarComponent = () => {
                   </div>
                   <div className="flex flex-col gap-2">
                     <Link
-                      href="/dashboard"
+                      href={user.role === 'company' ? '/company/dashboard' : '/jobs'}
                       className="flex items-center gap-2 text-white px-3 py-2 rounded hover:bg-white/10"
                       onClick={() => setIsMenuOpen(false)}
                     >

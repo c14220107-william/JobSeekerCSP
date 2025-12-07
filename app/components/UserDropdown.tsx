@@ -19,7 +19,7 @@ const UserDropdown = ({ user, handleLogout }: UserDropdownProps) => {
                     </div>
                 ) : null}
                 <Link
-                    href="/dashboard"
+                    href={user.role === 'company' ? '/company/dashboard' : '/jobs'}
                     className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 transition"
                 >
                     <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -4,6 +4,7 @@ import Image from "next/image"
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { loginUser, registerUser, saveUserData } from "@/app/apiServices"
+import Toast from "@/app/components/Toast"
 
 export default function UserLoginPage() {
     const router = useRouter()
@@ -18,7 +19,6 @@ export default function UserLoginPage() {
         message: '',
         type: 'success'
     })
-    const [progress, setProgress] = useState(100)
 
     useEffect(() => {
         // Check if register parameter is present
@@ -26,29 +26,6 @@ export default function UserLoginPage() {
             setIsLogin(false)
         }
     }, [searchParams])
-
-    useEffect(() => {
-        if (toast.show) {
-            setProgress(100)
-            const duration = 3000
-            const interval = 30
-            const step = (100 / duration) * interval
-
-            const timer = setInterval(() => {
-                setProgress(prev => {
-                    const next = prev - step
-                    if (next <= 0) {
-                        clearInterval(timer)
-                        setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 100)
-                        return 0
-                    }
-                    return next
-                })
-            }, interval)
-
-            return () => clearInterval(timer)
-        }
-    }, [toast.show])
 
     const validateEmail = (email: string) => {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -131,9 +108,9 @@ export default function UserLoginPage() {
                     type: 'success'
                 })
 
-                // Redirect to home after delay to show toast
+                // Redirect to user dashboard/jobs page after delay to show toast
                 setTimeout(() => {
-                    router.push('/')
+                    router.push('/jobs')
                 }, 1500)
             } catch (error) {
                 setToast({
@@ -183,9 +160,9 @@ export default function UserLoginPage() {
                     type: 'success'
                 })
 
-                // Redirect to home after delay to show toast
+                // Redirect to jobs page after delay to show toast
                 setTimeout(() => {
-                    router.push('/')
+                    router.push('/jobs')
                 }, 1500)
             } catch (error) {
                 setToast({
@@ -213,61 +190,12 @@ export default function UserLoginPage() {
 
     return <div className="login-bg min-h-screen grid grid-cols-2 place-items-center">
         {/* Toast Notification */}
-        {toast.show && (
-            <div className={`fixed top-4 right-4 z-50 min-w-[320px] max-w-md animate-slideIn ${toast.type === 'error' ? 'bg-red-50 border-red-500' : 'bg-green-50 border-green-500'
-                } border-l-4 rounded-lg shadow-2xl overflow-hidden`}>
-                <div className="p-4">
-                    <div className="flex items-start gap-3">
-                        {/* Icon */}
-                        <div className={`flex-shrink-0 w-6 h-6 ${toast.type === 'error' ? 'text-red-500' : 'text-green-500'
-                            }`}>
-                            {toast.type === 'error' ? (
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            ) : (
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                            )}
-                        </div>
-
-                        {/* Message */}
-                        <div className="flex-1">
-                            <p className={`font-semibold ${toast.type === 'error' ? 'text-red-800' : 'text-green-800'
-                                }`}>
-                                {toast.type === 'error' ? 'Error' : 'Success'}
-                            </p>
-                            <p className={`text-sm mt-1 ${toast.type === 'error' ? 'text-red-700' : 'text-green-700'
-                                }`}>
-                                {toast.message}
-                            </p>
-                        </div>
-
-                        {/* Close Button */}
-                        <button
-                            onClick={() => setToast({ show: false, message: '', type: 'success' })}
-                            className={`flex-shrink-0 ${toast.type === 'error' ? 'text-red-500 hover:text-red-700' : 'text-green-500 hover:text-green-700'
-                                }`}
-                        >
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                {/* Progress Bar */}
-                <div className={`h-1 ${toast.type === 'error' ? 'bg-red-200' : 'bg-green-200'
-                    }`}>
-                    <div
-                        className={`h-full transition-all ease-linear ${toast.type === 'error' ? 'bg-red-500' : 'bg-green-500'
-                            }`}
-                        style={{ width: `${progress}%` }}
-                    />
-                </div>
-            </div>
-        )}
+        <Toast
+            show={toast.show}
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast({ ...toast, show: false })}
+        />
 
         <div className="flex flex-col justify-center mt-[100px] w-full max-w-md px-8">
             {/* Login/Register Icon - Static, tidak ikut animasi */}
