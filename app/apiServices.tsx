@@ -1,9 +1,10 @@
-const API_BASE_URL = 'http://172.22.49.35:8000/api';
+const API_BASE_URL = 'http://192.168.1.8:8000/api';
 
 // Types
 interface UserData {
     full_name: string;
     email: string;
+    role?: string;
     token?: string;
     user_id?: number;
     [key: string]: unknown;
@@ -46,6 +47,42 @@ export const registerUser = async (full_name: string, email: string, password: s
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ full_name, email, password }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            // Handle validation errors
+            if (data.errors) {
+                const firstError = Object.values(data.errors)[0];
+                throw new Error(Array.isArray(firstError) ? firstError[0] : firstError as string);
+            }
+            throw new Error(data.message || 'Registration failed');
+        }
+
+        return data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+// Register Company API
+export const registerCompany = async (
+    company_name: string,
+    email: string,
+    password: string,
+) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/register/company`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                company_name,
+                email,
+                password,
+            }),
         });
 
         const data = await response.json();

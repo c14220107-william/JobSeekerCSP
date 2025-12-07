@@ -31,6 +31,11 @@ body,
   background-size: 105%;
 }
 
+.company-bg {
+  background-image: url('/bg-black.png');
+  background-size: 105%;
+}
+
 @media (min-width: 768px) {
   .landing-bg {
     background-image: url('/Frame 3.png');
@@ -39,4 +44,20 @@ body,
 
 html {
   scroll-behavior: smooth;
+}
+
+/* Toast Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
 }

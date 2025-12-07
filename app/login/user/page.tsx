@@ -1,17 +1,54 @@
 'use client'
 
 import Image from "next/image"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { loginUser, registerUser, saveUserData } from "@/app/apiServices"
 
 export default function UserLoginPage() {
     const router = useRouter()
+    const searchParams = useSearchParams()
     const [isLogin, setIsLogin] = useState(true)
     const [loginData, setLoginData] = useState({ email: '', password: '' })
     const [registerData, setRegisterData] = useState({ full_name: '', email: '', password: '' })
     const [errors, setErrors] = useState<{ [key: string]: string }>({})
     const [isLoading, setIsLoading] = useState(false)
+    const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
+        show: false,
+        message: '',
+        type: 'success'
+    })
+    const [progress, setProgress] = useState(100)
+
+    useEffect(() => {
+        // Check if register parameter is present
+        if (searchParams.get('register') === 'true') {
+            setIsLogin(false)
+        }
+    }, [searchParams])
+
+    useEffect(() => {
+        if (toast.show) {
+            setProgress(100)
+            const duration = 3000
+            const interval = 30
+            const step = (100 / duration) * interval
+
+            const timer = setInterval(() => {
+                setProgress(prev => {
+                    const next = prev - step
+                    if (next <= 0) {
+                        clearInterval(timer)
+                        setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 100)
+                        return 0
+                    }
+                    return next
+                })
+            }, interval)
+
+            return () => clearInterval(timer)
+        }
+    }, [toast.show])
 
     const validateEmail = (email: string) => {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -83,14 +120,26 @@ export default function UserLoginPage() {
                     full_name: profile?.full_name || '',
                     email: user?.email || '',
                     token: token,
-                    user_id: user?.id
+                    user_id: user?.id,
+                    role: user?.role || 'user'
                 })
 
-                // Redirect to home
-                router.push('/')
+                // Show success toast
+                setToast({
+                    show: true,
+                    message: 'Login successful! Welcome back.',
+                    type: 'success'
+                })
+
+                // Redirect to home after delay to show toast
+                setTimeout(() => {
+                    router.push('/')
+                }, 1500)
             } catch (error) {
-                setErrors({
-                    general: error instanceof Error ? error.message : 'Login failed. Please try again.'
+                setToast({
+                    show: true,
+                    message: error instanceof Error ? error.message : 'Login failed. Please try again.',
+                    type: 'error'
                 })
             } finally {
                 setIsLoading(false)
@@ -123,14 +172,26 @@ export default function UserLoginPage() {
                     full_name: profile?.full_name || registerData.full_name,
                     email: user?.email || registerData.email,
                     token: token,
-                    user_id: user?.id
+                    user_id: user?.id,
+                    role: 'user'
                 })
 
-                // Redirect to home
-                router.push('/')
+                // Show success toast
+                setToast({
+                    show: true,
+                    message: 'Registration successful! Welcome to JobSeeker.',
+                    type: 'success'
+                })
+
+                // Redirect to home after delay to show toast
+                setTimeout(() => {
+                    router.push('/')
+                }, 1500)
             } catch (error) {
-                setErrors({
-                    general: error instanceof Error ? error.message : 'Registration failed. Please try again.'
+                setToast({
+                    show: true,
+                    message: error instanceof Error ? error.message : 'Registration failed. Please try again.',
+                    type: 'error'
                 })
             } finally {
                 setIsLoading(false)
@@ -151,6 +212,63 @@ export default function UserLoginPage() {
     }
 
     return <div className="login-bg min-h-screen grid grid-cols-2 place-items-center">
+        {/* Toast Notification */}
+        {toast.show && (
+            <div className={`fixed top-4 right-4 z-50 min-w-[320px] max-w-md animate-slideIn ${toast.type === 'error' ? 'bg-red-50 border-red-500' : 'bg-green-50 border-green-500'
+                } border-l-4 rounded-lg shadow-2xl overflow-hidden`}>
+                <div className="p-4">
+                    <div className="flex items-start gap-3">
+                        {/* Icon */}
+                        <div className={`flex-shrink-0 w-6 h-6 ${toast.type === 'error' ? 'text-red-500' : 'text-green-500'
+                            }`}>
+                            {toast.type === 'error' ? (
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            ) : (
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                            )}
+                        </div>
+
+                        {/* Message */}
+                        <div className="flex-1">
+                            <p className={`font-semibold ${toast.type === 'error' ? 'text-red-800' : 'text-green-800'
+                                }`}>
+                                {toast.type === 'error' ? 'Error' : 'Success'}
+                            </p>
+                            <p className={`text-sm mt-1 ${toast.type === 'error' ? 'text-red-700' : 'text-green-700'
+                                }`}>
+                                {toast.message}
+                            </p>
+                        </div>
+
+                        {/* Close Button */}
+                        <button
+                            onClick={() => setToast({ show: false, message: '', type: 'success' })}
+                            className={`flex-shrink-0 ${toast.type === 'error' ? 'text-red-500 hover:text-red-700' : 'text-green-500 hover:text-green-700'
+                                }`}
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className={`h-1 ${toast.type === 'error' ? 'bg-red-200' : 'bg-green-200'
+                    }`}>
+                    <div
+                        className={`h-full transition-all ease-linear ${toast.type === 'error' ? 'bg-red-500' : 'bg-green-500'
+                            }`}
+                        style={{ width: `${progress}%` }}
+                    />
+                </div>
+            </div>
+        )}
+
         <div className="flex flex-col justify-center mt-[100px] w-full max-w-md px-8">
             {/* Login/Register Icon - Static, tidak ikut animasi */}
             <div className="mb-8 flex justify-center">
@@ -173,11 +291,6 @@ export default function UserLoginPage() {
                 >
 
                     <form onSubmit={handleLoginSubmit} className="space-y-4">
-                        {errors.general && (
-                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                                {errors.general}
-                            </div>
-                        )}
                         <div>
                             <label htmlFor="login-email" className="block text-white mb-2 font-medium">
                                 Email
@@ -226,6 +339,15 @@ export default function UserLoginPage() {
                                 Register
                             </button>
                         </p>
+                        <p className="text-center text-white/70 -mt-1">
+                            Switch to company page?{' '}
+                            <a
+                                href="/login/company"
+                                className="text-white font-bold hover:underline"
+                            >
+                                Click here
+                            </a>
+                        </p>
                     </form>
                 </div>
 
@@ -238,11 +360,6 @@ export default function UserLoginPage() {
                 >
 
                     <form onSubmit={handleRegisterSubmit} className="space-y-4">
-                        {errors.general && (
-                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                                {errors.general}
-                            </div>
-                        )}
                         <div>
                             <label htmlFor="register-name" className="block text-white mb-2 font-medium">
                                 Name
@@ -305,6 +422,16 @@ export default function UserLoginPage() {
                             >
                                 Log In
                             </button>
+                        </p>
+
+                        <p className="text-center text-white/70 -mt-1">
+                            Switch to company page?{' '}
+                            <a
+                                href="/login/company"
+                                className="text-white font-bold hover:underline"
+                            >
+                                Click here
+                            </a>
                         </p>
                     </form>
                 </div>
