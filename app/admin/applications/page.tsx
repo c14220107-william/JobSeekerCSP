@@ -1,7 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import AdminNavbar from '@/app/components/AdminNavbar';
+import AdminNavbar from '@/app/components/admin/AdminNavbar';
+import PageHeader from '@/app/components/admin/PageHeader';
+import SearchBar from '@/app/components/admin/SearchBar';
+import StatCard from '@/app/components/admin/StatCard';
+import LoadingSpinner from '@/app/components/company/LoadingSpinner';
 
 interface Application {
   id: number;
@@ -26,6 +30,7 @@ interface Application {
 }
 
 export default function AdminApplications() {
+  // useState Hooks - State Management untuk CSP
   const [loading, setLoading] = useState(true);
   const [applications, setApplications] = useState<Application[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -109,12 +114,14 @@ export default function AdminApplications() {
   };
 
   useEffect(() => {
+    // Side Effects - useEffect Hook untuk data loading
     const initLoad = async () => {
       await loadData();
     };
     initLoad();
   }, []);
 
+  // Array filtering dengan Modern JavaScript - Multiple conditions
   const filteredApplications = applications.filter(app =>
     app.seeker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     app.seeker.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -122,6 +129,7 @@ export default function AdminApplications() {
     app.jobPosting.company.company_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Helper function untuk status badge colors - Conditional styling
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
@@ -137,12 +145,13 @@ export default function AdminApplications() {
     }
   };
 
+  // Conditional Rendering - Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <AdminNavbar />
         <div className="flex justify-center items-center pt-32">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FFAD42]"></div>
+          <LoadingSpinner size="large" />
         </div>
       </div>
     );
@@ -153,56 +162,47 @@ export default function AdminApplications() {
       <AdminNavbar />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-black font-sora">Applications</h1>
-          <p className="mt-2 text-gray-600 font-sans">View all job applications on the platform</p>
-        </div>
+        {/* Component: PageHeader - Reusable header dengan Props */}
+        <PageHeader
+          title="Applications"
+          description="View all job applications on the platform"
+        />
 
-        {/* Search */}
-        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-          <div className="relative">
-            <svg
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search by name, email, job title, or company..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFAD42] focus:border-transparent"
-            />
-          </div>
-        </div>
+        {/* Component: SearchBar - Reusable search dengan useState Hook */}
+        <SearchBar
+          onSearch={setSearchTerm}
+          placeholder="Search by name, email, job title, or company..."
+        />
 
-        {/* Stats */}
+        {/* Statistics Cards - Array mapping dengan StatCard component */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow-md p-4 text-center">
-            <p className="text-2xl font-bold text-gray-900">{applications.length}</p>
-            <p className="text-sm text-gray-600">Total Applications</p>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-4 text-center">
-            <p className="text-2xl font-bold text-yellow-600">{applications.filter(a => a.status === 'pending').length}</p>
-            <p className="text-sm text-gray-600">Pending</p>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-4 text-center">
-            <p className="text-2xl font-bold text-blue-600">{applications.filter(a => a.status === 'reviewed').length}</p>
-            <p className="text-sm text-gray-600">Reviewed</p>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">{applications.filter(a => a.status === 'accepted').length}</p>
-            <p className="text-sm text-gray-600">Accepted</p>
-          </div>
+          <StatCard
+            title="Total Applications"
+            value={applications.length}
+            color="gray"
+          />
+          <StatCard
+            title="Pending"
+            value={applications.filter(a => a.status === 'pending').length}
+            color="yellow"
+          />
+          <StatCard
+            title="Reviewed"
+            value={applications.filter(a => a.status === 'reviewed').length}
+            color="blue"
+          />
+          <StatCard
+            title="Accepted"
+            value={applications.filter(a => a.status === 'accepted').length}
+            color="green"
+          />
         </div>
 
-        {/* Applications List */}
+        {/* Applications Table - Conditional Rendering & Array Mapping */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          {/* Conditional Rendering - Empty state vs data */}
           {filteredApplications.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">
+            <div className="p-12 text-center text-gray-500 font-sans">
               No applications found
             </div>
           ) : (
@@ -210,47 +210,50 @@ export default function AdminApplications() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
                       Applicant
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
                       Job Position
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
                       Company
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
                       Applied Date
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
+                  {/* Array Mapping - Rendering dynamic data */}
                   {filteredApplications.map(application => (
-                    <tr key={application.id} className="hover:bg-gray-50">
+                    <tr key={application.id} className="hover:bg-gray-50 transition-colors duration-150">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <p className="font-semibold text-gray-900">{application.seeker.name}</p>
-                          <p className="text-sm text-gray-500">{application.seeker.email}</p>
+                          <p className="font-semibold text-gray-900 font-sans">{application.seeker.name}</p>
+                          <p className="text-sm text-gray-500 font-sans">{application.seeker.email}</p>
+                          {/* Conditional Rendering - Optional phone number */}
                           {application.seeker.profile?.phone && (
-                            <p className="text-sm text-gray-500">{application.seeker.profile.phone}</p>
+                            <p className="text-sm text-gray-500 font-sans">{application.seeker.profile.phone}</p>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="font-medium text-gray-900">{application.jobPosting.title}</p>
+                        <p className="font-medium text-gray-900 font-sans">{application.jobPosting.title}</p>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="text-gray-900">{application.jobPosting.company.company_name}</p>
+                        <p className="text-gray-900 font-sans">{application.jobPosting.company.company_name}</p>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(application.status)}`}>
+                        {/* Conditional Styling - Dynamic badge color */}
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold font-sans ${getStatusColor(application.status)}`}>
                           {application.status.toUpperCase()}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-sans">
                         {new Date(application.applied_at).toLocaleDateString()}
                       </td>
                     </tr>
