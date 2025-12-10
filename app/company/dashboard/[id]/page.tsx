@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import CompanyNavbar from '@/app/components/CompanyNavbar';
+import ApplicantCard from '@/app/components/company/ApplicantCard';
+import Swal from 'sweetalert2';
 
 interface Qualification {
   id: number;
@@ -12,12 +14,18 @@ interface Qualification {
 
 interface Application {
   id: number;
-  seeker: {
+  user: {
     id: number;
     name: string;
     email: string;
   };
-  status: string;
+  profile: {
+    full_name: string;
+    age?: number;
+    avatar_url?: string;
+    cv_url?: string;
+  };
+  status: 'pending' | 'accepted' | 'rejected';
   applied_at: string;
 }
 
@@ -68,7 +76,39 @@ export default function JobPostingDetail() {
               { id: 1, name: 'Bachelor Degree' },
               { id: 2, name: '2+ Years Experience' }
             ],
-            applications: [],
+            applications: [
+              {
+                id: 1,
+                user: {
+                  id: 1,
+                  name: 'John Doe',
+                  email: 'john.doe@email.com'
+                },
+                profile: {
+                  full_name: 'John Doe',
+                  age: 28,
+                  avatar_url: 'https://via.placeholder.com/100',
+                  cv_url: '/uploads/cv/john-doe.pdf'
+                },
+                status: 'pending',
+                applied_at: new Date(Date.now() - 86400000).toISOString()
+              },
+              {
+                id: 2,
+                user: {
+                  id: 2,
+                  name: 'Jane Smith',
+                  email: 'jane.smith@email.com'
+                },
+                profile: {
+                  full_name: 'Jane Smith',
+                  age: 26,
+                  cv_url: '/uploads/cv/jane-smith.pdf'
+                },
+                status: 'accepted',
+                applied_at: new Date(Date.now() - 172800000).toISOString()
+              }
+            ],
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           });
@@ -82,6 +122,145 @@ export default function JobPostingDetail() {
 
     loadData();
   }, [jobId]);
+
+  // Event Handler - Accept applicant
+  const handleAccept = async (applicantId: number) => {
+    if (!jobPosting) return;
+    const applicant = jobPosting.applications.find(a => a.id === applicantId);
+    if (!applicant) return;
+
+    const result = await Swal.fire({
+      title: 'Accept Applicant?',
+      html: `
+        <div class="text-left">
+          <p class="text-gray-700 mb-3">Are you sure you want to accept this applicant?</p>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <p class="font-semibold text-gray-900">${applicant.profile.full_name}</p>
+            <p class="text-sm text-gray-600">${applicant.user.email}</p>
+          </div>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10B981',
+      cancelButtonColor: '#6B7280',
+      confirmButtonText: 'Yes, Accept!',
+      customClass: {
+        confirmButton: 'font-sans font-semibold px-6 py-2.5 rounded-lg',
+        cancelButton: 'font-sans font-semibold px-6 py-2.5 rounded-lg',
+        title: 'font-sora text-2xl'
+      }
+    });
+
+    if (result.isConfirmed) {
+      try {
+        Swal.fire({
+          title: 'Processing...',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        // TODO: API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Update state
+        setJobPosting(prev => prev ? {
+          ...prev,
+          applications: prev.applications.map(a =>
+            a.id === applicantId ? { ...a, status: 'accepted' as const } : a
+          )
+        } : null);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Applicant Accepted!',
+          text: `${applicant.profile.full_name} has been accepted.`,
+          confirmButtonColor: '#FF851A',
+          customClass: {
+            confirmButton: 'font-sans font-semibold px-6 py-2.5 rounded-lg',
+            title: 'font-sora text-2xl'
+          }
+        });
+      } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error!',
+          text: 'Failed to accept applicant.',
+          confirmButtonColor: '#EF4444'
+        });
+      }
+    }
+  };
+
+  // Event Handler - Reject applicant
+  const handleReject = async (applicantId: number) => {
+    if (!jobPosting) return;
+    const applicant = jobPosting.applications.find(a => a.id === applicantId);
+    if (!applicant) return;
+
+    const result = await Swal.fire({
+      title: 'Reject Applicant?',
+      html: `
+        <div class="text-left">
+          <p class="text-gray-700 mb-3">Are you sure you want to reject this applicant?</p>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <p class="font-semibold text-gray-900">${applicant.profile.full_name}</p>
+            <p class="text-sm text-gray-600">${applicant.user.email}</p>
+          </div>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#EF4444',
+      cancelButtonColor: '#6B7280',
+      confirmButtonText: 'Yes, Reject!',
+      customClass: {
+        confirmButton: 'font-sans font-semibold px-6 py-2.5 rounded-lg',
+        cancelButton: 'font-sans font-semibold px-6 py-2.5 rounded-lg',
+        title: 'font-sora text-2xl'
+      }
+    });
+
+    if (result.isConfirmed) {
+      try {
+        Swal.fire({
+          title: 'Processing...',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        // TODO: API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        setJobPosting(prev => prev ? {
+          ...prev,
+          applications: prev.applications.map(a =>
+            a.id === applicantId ? { ...a, status: 'rejected' as const } : a
+          )
+        } : null);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Applicant Rejected!',
+          text: `${applicant.profile.full_name} has been rejected.`,
+          confirmButtonColor: '#FF851A',
+          customClass: {
+            confirmButton: 'font-sans font-semibold px-6 py-2.5 rounded-lg',
+            title: 'font-sora text-2xl'
+          }
+        });
+      } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error!',
+          text: 'Failed to reject applicant.',
+          confirmButtonColor: '#EF4444'
+        });
+      }
+    }
+  };
 
   const handleDelete = async () => {
     try {
@@ -219,30 +398,23 @@ export default function JobPostingDetail() {
             {/* Applications Card */}
             <div className="bg-white rounded-lg shadow-md p-8">
               <h2 className="text-2xl font-bold text-black font-sora mb-4">
-                Applications ({jobPosting.applications.length})
+                Applicants ({jobPosting.applications.length})
               </h2>
               
               {jobPosting.applications.length === 0 ? (
                 <div className="text-center py-8 text-gray-500 font-sans">
-                  No applications yet
+                  No applicants yet
                 </div>
               ) : (
                 <div className="space-y-4">
                   {jobPosting.applications.map((application) => (
-                    <div
+                    <ApplicantCard
                       key={application.id}
-                      className="border border-gray-200 rounded-lg p-4 hover:border-[#FF851A] transition-colors duration-200"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-semibold text-black font-sans">{application.seeker.name}</h3>
-                          <p className="text-sm text-gray-600 font-sans">{application.seeker.email}</p>
-                        </div>
-                        <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-sans font-semibold rounded-full">
-                          {application.status}
-                        </span>
-                      </div>
-                    </div>
+                      applicant={application}
+                      jobPostingId={jobPosting.id}
+                      onAccept={handleAccept}
+                      onReject={handleReject}
+                    />
                   ))}
                 </div>
               )}
