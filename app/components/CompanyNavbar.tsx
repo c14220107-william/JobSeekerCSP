@@ -24,14 +24,14 @@ export default function CompanyNavbar() {
   return (
     <nav className="w-full fixed bg-black px-4 md:px-8 py-3 flex items-center justify-between z-50">
       {/* Logo & Brand */}
-      <div className="flex items-center gap-2">
+      <div className="flex gap-2 mt-2">
         <Link href="/company/dashboard">
           <Image
             src="/icon.png"
             alt="logo"
-            width={90}
-            height={90}
-            className="w-[90%] h-[90%] max-md:w-[75%] max-md:h-[75%]"
+            width={170}
+            height={170}
+            className="max-md:w-[%] max-md:h-[100%]"
           />
         </Link>
       </div>
