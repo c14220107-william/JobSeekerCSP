@@ -14,19 +14,18 @@ export default function AdminNavbar() {
   };
 
   return (
-    <nav className="w-full fixed bg-black px-4 md:px-8 py-3 flex items-center justify-between z-50">
+    <nav className="w-full fixed bg-black px-4 md:px-8 py-2 flex items-center justify-between z-50">
       {/* Logo & Brand */}
-      <div className="flex items-center gap-2">
-        <Link href="/admin/dashboard">
+      <div className="flex items-center">
+        <Link href="/admin/dashboard" className="flex items-center">
           <Image
             src="/icon.png"
             alt="logo"
-            width={90}
-            height={90}
-            className="w-[90%] h-[90%] max-md:w-[75%] max-md:h-[75%]"
+            width={70}
+            height={50}
+            className="w-auto h-[50px] max-md:h-[40px] object-contain"
           />
         </Link>
-        <span className="text-white font-bold font-sora text-lg hidden md:block">Admin Panel</span>
       </div>
 
       {/* Desktop Menu */}
