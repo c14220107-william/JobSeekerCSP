@@ -106,7 +106,7 @@ export default function EditJobPosting() {
     setLoading(true);
 
     try {
-      await updateJobPosting(Number(jobId), formData);
+      await updateJobPosting(jobId, formData);
 
       // Show success toast
       setToast({

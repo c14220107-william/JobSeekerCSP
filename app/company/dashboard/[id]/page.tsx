@@ -124,7 +124,7 @@ export default function JobPostingDetail() {
 
   const handleDelete = async () => {
     try {
-      await deleteJobPosting(Number(jobId));
+      await deleteJobPosting(jobId);
 
       // Show success toast
       setToast({
