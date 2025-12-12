@@ -1,31 +1,14 @@
 'use client'
 
 import Link from 'next/link';
-
-// Interface untuk Props (demonstrasi Props di React)
-interface Qualification {
-  id: number;
-  name: string;
-}
-
-interface JobPostingCardProps {
-  job: {
-    id: number;
-    title: string;
-    description?: string;
-    location: string;
-    salary: string;
-    tenure: string;
-    type: string;
-    status: 'open' | 'closed';
-    qualifications: Qualification[];
-    applications: Array<unknown>;
-    created_at?: string;
-  };
-  onDelete: (job: JobPostingCardProps['job']) => void; // Callback function sebagai props
-}
+import { JobPosting } from '@/app/services/jobPostingService';
 
 // Component dengan Props - Demonstrasi Component Reusability
+interface JobPostingCardProps {
+  job: JobPosting;
+  onDelete: (job: JobPosting) => void; // Callback function sebagai props
+}
+
 export default function JobPostingCard({ job, onDelete }: JobPostingCardProps) {
   // Conditional Rendering - menampilkan status badge berdasarkan kondisi
   const getStatusStyle = () => {
@@ -46,7 +29,7 @@ export default function JobPostingCard({ job, onDelete }: JobPostingCardProps) {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h3 className="text-xl font-bold text-black font-sora mb-2">{job.title}</h3>
-            
+
             {/* Location */}
             <div className="flex items-center text-sm text-gray-600 font-sans mb-1">
               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,7 +38,7 @@ export default function JobPostingCard({ job, onDelete }: JobPostingCardProps) {
               </svg>
               {job.location}
             </div>
-            
+
             {/* Salary */}
             <div className="flex items-center text-sm text-gray-600 font-sans">
               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,7 +47,7 @@ export default function JobPostingCard({ job, onDelete }: JobPostingCardProps) {
               {job.salary || 'Negotiable'}
             </div>
           </div>
-          
+
           {/* Conditional Rendering - Status Badge */}
           <span className={`px-3 py-1 rounded-full text-xs font-sans font-semibold ${getStatusStyle()}`}>
             {job.status.toUpperCase()}
@@ -80,7 +63,7 @@ export default function JobPostingCard({ job, onDelete }: JobPostingCardProps) {
             <span className="font-semibold">{job.type}</span> • {job.tenure}
           </span>
         </div>
-        
+
         {/* Applications Count */}
         <div className="flex items-center text-sm text-gray-600 font-sans mb-3">
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,18 +99,31 @@ export default function JobPostingCard({ job, onDelete }: JobPostingCardProps) {
 
       {/* Actions Section */}
       <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-2">
-        <Link
-          href={`/company/dashboard/${job.id}`}
-          className="flex-1 text-center px-4 py-2 bg-blue-600 text-white text-sm font-sans font-semibold rounded-md hover:bg-blue-700 hover:scale-105 transition-all duration-200"
-        >
-          View
-        </Link>
-        <Link
-          href={`/company/dashboard/edit/${job.id}`}
-          className="flex-1 text-center px-4 py-2 bg-[#FF851A] text-white text-sm font-sans font-semibold rounded-md hover:bg-[#FBBF24] hover:scale-105 transition-all duration-200"
-        >
-          Edit
-        </Link>
+        {job.id ? (
+          <>
+            <Link
+              href={`/company/dashboard/${job.id}`}
+              className="flex-1 text-center px-4 py-2 bg-blue-600 text-white text-sm font-sans font-semibold rounded-md hover:bg-blue-700 hover:scale-105 transition-all duration-200"
+            >
+              View
+            </Link>
+            <Link
+              href={`/company/dashboard/edit/${job.id}`}
+              className="flex-1 text-center px-4 py-2 bg-[#FF851A] text-white text-sm font-sans font-semibold rounded-md hover:bg-[#FBBF24] hover:scale-105 transition-all duration-200"
+            >
+              Edit
+            </Link>
+          </>
+        ) : (
+          <>
+            <div className="flex-1 text-center px-4 py-2 bg-gray-400 text-white text-sm font-sans font-semibold rounded-md cursor-not-allowed">
+              View
+            </div>
+            <div className="flex-1 text-center px-4 py-2 bg-gray-400 text-white text-sm font-sans font-semibold rounded-md cursor-not-allowed">
+              Edit
+            </div>
+          </>
+        )}
         <button
           onClick={handleDeleteClick}
           className="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-sans font-semibold rounded-md hover:bg-red-700 hover:scale-105 transition-all duration-200"

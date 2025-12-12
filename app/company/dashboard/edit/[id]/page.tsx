@@ -3,32 +3,19 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import CompanyNavbar from '@/app/components/CompanyNavbar';
-
-interface Qualification {
-  id: number;
-  name: string;
-}
-
-interface FormData {
-  title: string;
-  location: string;
-  salary: string;
-  description: string;
-  tenure: string;
-  type: string;
-  status: 'open' | 'closed';
-  qualification_ids: number[];
-}
+import Toast from '@/app/components/Toast';
+import { getQualifications, getJobPostingById, updateJobPosting, Qualification, CreateJobPostingData } from '@/app/services/jobPostingService';
 
 export default function EditJobPosting() {
   const router = useRouter();
   const params = useParams();
   const jobId = params?.id as string;
-  
+
   const [loading, setLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(true);
   const [qualifications, setQualifications] = useState<Qualification[]>([]);
-  const [formData, setFormData] = useState<FormData>({
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'warning' }>({ show: false, message: '', type: 'success' });
+  const [formData, setFormData] = useState<CreateJobPostingData>({
     title: '',
     location: '',
     salary: '',
@@ -42,68 +29,103 @@ export default function EditJobPosting() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // TODO: Fetch job posting data and qualifications from API
-        // const [jobResponse, qualsResponse] = await Promise.all([
-        //   fetch(`/api/company/job-postings/${jobId}`),
-        //   fetch('/api/qualifications')
-        // ]);
-        // const jobData = await jobResponse.json();
-        // const qualsData = await qualsResponse.json();
-        
-        // Mock data
-        setQualifications([
-          { id: 1, name: 'Bachelor Degree' },
-          { id: 2, name: '2+ Years Experience' },
-          { id: 3, name: 'Communication Skills' },
-          { id: 4, name: 'Leadership' },
-          { id: 5, name: 'Problem Solving' }
+        // Validate jobId - can be number or UUID string
+        if (!jobId || jobId === 'undefined' || jobId === 'null' || jobId.trim() === '') {
+          throw new Error('Invalid job posting ID');
+        }
+
+        console.log('Loading job posting with ID:', jobId);
+
+        const [jobData, qualsData] = await Promise.all([
+          getJobPostingById(jobId),
+          getQualifications()
         ]);
-        
-        // Mock job data (would come from API)
-        // setFormData({
-        //   title: jobData.data.job_posting.title,
-        //   location: jobData.data.job_posting.location,
-        //   salary: jobData.data.job_posting.salary,
-        //   description: jobData.data.job_posting.description,
-        //   tenure: jobData.data.job_posting.tenure,
-        //   type: jobData.data.job_posting.type,
-        //   status: jobData.data.job_posting.status,
-        //   qualification_ids: jobData.data.job_posting.qualifications.map((q: Qualification) => q.id)
-        // });
-        
+
+        console.log('Loaded job data:', jobData);
+        console.log('Loaded qualifications:', qualsData);
+
+        setQualifications(qualsData);
+
+        // Set form data from job posting
+        setFormData({
+          title: jobData.title,
+          location: jobData.location,
+          salary: jobData.salary || '',
+          description: jobData.description || '',
+          tenure: jobData.tenure,
+          type: jobData.type,
+          status: jobData.status,
+          qualification_ids: jobData.qualifications.map(q => q.id)
+        });
+
         setFetchingData(false);
       } catch (error) {
         console.error('Error fetching data:', error);
+        setToast({
+          show: true,
+          message: error instanceof Error ? error.message : 'Failed to load job posting',
+          type: 'error'
+        });
         setFetchingData(false);
       }
     };
 
-    loadData();
+    if (jobId && jobId !== 'undefined' && jobId !== 'null') {
+      loadData();
+    } else {
+      setToast({
+        show: true,
+        message: 'Invalid job posting ID',
+        type: 'error'
+      });
+      setFetchingData(false);
+    }
   }, [jobId]);
+
+  const formatRupiah = (value: string) => {
+    // Remove non-numeric characters
+    const numericValue = value.replace(/[^0-9]/g, '');
+
+    // Format with thousands separator
+    if (numericValue === '') return '';
+    return new Intl.NumberFormat('id-ID').format(parseInt(numericValue));
+  };
+
+  const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const formattedValue = formatRupiah(rawValue);
+
+    setFormData(prev => ({
+      ...prev,
+      salary: formattedValue
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/company/job-postings/${jobId}`, {
-      //   method: 'PUT',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${token}`
-      //   },
-      //   body: JSON.stringify(formData)
-      // });
-      
-      // Mock success
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Redirect to dashboard
-      router.push('/company/dashboard');
+      await updateJobPosting(Number(jobId), formData);
+
+      // Show success toast
+      setToast({
+        show: true,
+        message: 'Job posting updated successfully!',
+        type: 'success'
+      });
+
+      // Redirect to dashboard after delay
+      setTimeout(() => {
+        router.push('/company/dashboard');
+      }, 1500);
     } catch (error) {
       console.error('Error updating job posting:', error);
-      alert('Failed to update job posting');
+      setToast({
+        show: true,
+        message: error instanceof Error ? error.message : 'Failed to update job posting',
+        type: 'error'
+      });
     } finally {
       setLoading(false);
     }
@@ -131,7 +153,49 @@ export default function EditJobPosting() {
       <div className="min-h-screen bg-gray-50">
         <CompanyNavbar />
         <div className="flex justify-center items-center pt-32">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FFAD42]"></div>
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FFAD42] mb-4"></div>
+            <p className="text-gray-600 font-sans">Loading job posting data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If form data is still empty after fetching, show error
+  if (!formData.title && !fetchingData) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <CompanyNavbar />
+
+        {/* Toast Notification */}
+        <Toast
+          key={toast.show ? `toast-${toast.message}` : 'toast'}
+          show={toast.show}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
+          <div className="bg-white rounded-lg shadow-md p-12 text-center">
+            <svg className="w-24 h-24 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h2 className="text-2xl font-bold text-gray-900 font-sora mb-4">Failed to Load Job Posting</h2>
+            <p className="text-gray-600 font-sans mb-6">
+              {toast.message || 'Unable to load the job posting data.'}
+            </p>
+            <button
+              onClick={() => router.push('/company/dashboard')}
+              className="inline-flex items-center px-6 py-3 bg-[#FF851A] text-white font-sans font-semibold rounded-lg hover:bg-[#FBBF24] transition"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Dashboard
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -140,7 +204,16 @@ export default function EditJobPosting() {
   return (
     <div className="min-h-screen bg-gray-50">
       <CompanyNavbar />
-      
+
+      {/* Toast Notification */}
+      <Toast
+        key={toast.show ? Date.now() : 'toast'}
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, show: false })}
+      />
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
         {/* Header */}
         <div className="mb-8">
@@ -201,10 +274,11 @@ export default function EditJobPosting() {
                   id="salary"
                   name="salary"
                   value={formData.salary}
-                  onChange={handleChange}
+                  onChange={handleSalaryChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFAD42] focus:border-transparent"
-                  placeholder="e.g. Rp 10.000.000 - Rp 15.000.000"
+                  placeholder="e.g. 10000000"
                 />
+                <p className="text-xs text-gray-500 mt-1">Enter numbers only, will be auto-formatted</p>
               </div>
             </div>
 
