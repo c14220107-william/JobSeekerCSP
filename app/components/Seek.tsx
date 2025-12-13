@@ -38,7 +38,7 @@ export default function Seek() {
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Array.isArray(displayedJobs) && displayedJobs.length > 0 ? (
           displayedJobs.map((job) => (
-            <Card key={job._id} job={job} />
+            <Card key={job.id} job={job} />
           ))
         ) : (
           <div className="col-span-full text-center">

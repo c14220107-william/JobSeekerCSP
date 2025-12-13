@@ -8,6 +8,35 @@ import PageHeader from '@/app/components/company/PageHeader';
 import ApplicantCard from '@/app/components/company/ApplicantCard';
 import Toast from '@/app/components/Toast';
 
+// Type definitions
+interface JobPosting {
+  id: number;
+  title: string;
+  location: string;
+  type: string;
+  status: string;
+}
+
+interface Applicant {
+  id: number;
+  seeker: {
+    id: number;
+    user_id: number;
+    full_name: string;
+    age?: number;
+    avatar_url?: string;
+    cv_url?: string;
+    bio?: string;
+    user: {
+      id: number;
+      name: string;
+      email: string;
+    };
+  };
+  status: 'pending' | 'accepted' | 'rejected';
+  applied_at: string;
+}
+
 /**
  * View Job Posting Applicants Page
  * 
@@ -43,7 +72,7 @@ interface JobPosting {
   title: string;
   location: string;
   type: string;
-  status: 'open' | 'closed';
+  status: string;
 }
 
 export default function ViewJobApplicants() {
@@ -82,50 +111,59 @@ export default function ViewJobApplicants() {
           setApplicants([
             {
               id: 1,
-              user: {
+              seeker: {
                 id: 1,
-                name: 'John Doe',
-                email: 'john.doe@email.com'
-              },
-              profile: {
+                user_id: 1,
                 full_name: 'John Doe',
                 age: 28,
                 avatar_url: 'https://via.placeholder.com/100',
-                cv_url: '/uploads/cv/john-doe.pdf'
+                cv_url: '/uploads/cv/john-doe.pdf',
+                bio: 'Experienced software developer',
+                user: {
+                  id: 1,
+                  name: 'John Doe',
+                  email: 'john.doe@email.com'
+                }
               },
               status: 'pending',
               applied_at: new Date(Date.now() - 86400000).toISOString()
             },
             {
               id: 2,
-              user: {
+              seeker: {
                 id: 2,
-                name: 'Jane Smith',
-                email: 'jane.smith@email.com'
-              },
-              profile: {
+                user_id: 2,
                 full_name: 'Jane Smith',
                 age: 26,
-                cv_url: '/uploads/cv/jane-smith.pdf'
+                cv_url: '/uploads/cv/jane-smith.pdf',
+                bio: 'Frontend developer with 3 years experience',
+                user: {
+                  id: 2,
+                  name: 'Jane Smith',
+                  email: 'jane.smith@email.com'
+                }
               },
               status: 'accepted',
               applied_at: new Date(Date.now() - 172800000).toISOString()
             },
             {
               id: 3,
-              user: {
+              seeker: {
                 id: 3,
-                name: 'Michael Johnson',
-                email: 'michael.j@email.com'
-              },
-              profile: {
+                user_id: 3,
                 full_name: 'Michael Johnson',
-                age: 30
+                age: 30,
+                bio: 'Full-stack developer',
+                user: {
+                  id: 3,
+                  name: 'Michael Johnson',
+                  email: 'michael.j@email.com'
+                }
               },
               status: 'rejected',
               applied_at: new Date(Date.now() - 259200000).toISOString()
             }
-          ]);
+          ] as Applicant[]);
 
           setLoading(false);
         }, 500);
@@ -308,8 +346,8 @@ export default function ViewJobApplicants() {
                 key={filter.id}
                 onClick={() => setFilterStatus(filter.id as typeof filterStatus)}
                 className={`px-5 py-2 rounded-lg font-sans font-semibold transition-all duration-200 ${filterStatus === filter.id
-                    ? 'bg-[#FF851A] text-white scale-105'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-[#FF851A] text-white scale-105'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
               >
                 {filter.label} ({filter.count})

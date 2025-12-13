@@ -38,14 +38,14 @@ interface ApplicantCardProps {
   showActions?: boolean;
 }
 
-export default function ApplicantCard({ 
-  applicant, 
+export default function ApplicantCard({
+  applicant,
   jobPostingId,
-  onAccept, 
+  onAccept,
   onReject,
-  showActions = true 
+  showActions = true
 }: ApplicantCardProps) {
-  
+
   // Helper function - Convert Laravel storage path to full URL
   const getStorageUrl = (path: string | undefined | null): string | null => {
     if (!path) return null;
@@ -56,7 +56,7 @@ export default function ApplicantCard({
     // Convert storage path to URL
     return `http://127.0.0.1:8000${path}`;
   };
-  
+
   // Helper function - Conditional styling untuk status badge
   const getStatusStyle = () => {
     const styles = {
@@ -102,7 +102,7 @@ export default function ApplicantCard({
                 </p>
               )}
             </div>
-            
+
             {/* Status Badge - Conditional Styling */}
             <span className={`px-3 py-1 rounded-full text-xs font-semibold font-sans ${getStatusStyle()}`}>
               {applicant.status.toUpperCase()}
