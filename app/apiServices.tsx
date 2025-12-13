@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+    const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 // Types
 interface UserData {
@@ -24,6 +24,10 @@ export const loginUser = async (email: string, password: string) => {
         const data = await response.json();
 
         if (!response.ok) {
+            // Handle 403 for unapproved company
+            if (response.status === 403 && data.data?.role === 'company' && !data.data?.is_approved) {
+                throw new Error(data.message || 'Your company account is pending approval from admin. Please wait for approval.');
+            }
             // Handle validation errors
             if (data.errors) {
                 const firstError = Object.values(data.errors)[0];

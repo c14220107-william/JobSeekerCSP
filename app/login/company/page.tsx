@@ -98,10 +98,23 @@ export default function UserLoginPage() {
                 const user = userData.user
                 const company = user?.company
                 const token = userData.access_token || response.access_token
+                const isApproved = userData.is_approved
 
                 // Validate that this is a company account (not regular user)
                 if (user?.role !== 'company') {
                     throw new Error('This email is not registered as a company account. Please use the user login page.')
+                }
+
+                // Check if company is approved (backend returns 403 if not approved)
+                // This check is redundant as backend already blocks, but keeping for UI feedback
+                if (isApproved === false) {
+                    setToast({
+                        show: true,
+                        message: 'Your company account is pending approval from admin. Please wait for approval.',
+                        type: 'warning'
+                    })
+                    setIsLoading(false)
+                    return
                 }
 
                 // Save company data to localStorage
@@ -124,12 +137,21 @@ export default function UserLoginPage() {
                 setTimeout(() => {
                     router.push('/company/dashboard')
                 }, 1500)
-            } catch (error) {
-                setToast({
-                    show: true,
-                    message: error instanceof Error ? error.message : 'Login failed. Please try again.',
-                    type: 'error'
-                })
+            } catch (error: any) {
+                // Handle 403 response for unapproved company
+                if (error.message && error.message.includes('pending approval')) {
+                    setToast({
+                        show: true,
+                        message: 'Your company account is pending approval from admin. Please wait for approval.',
+                        type: 'warning'
+                    })
+                } else {
+                    setToast({
+                        show: true,
+                        message: error instanceof Error ? error.message : 'Login failed. Please try again.',
+                        type: 'error'
+                    })
+                }
             } finally {
                 setIsLoading(false)
             }
