@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://192.168.1.8:8000/api';
+const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 // Types
 export interface Qualification {
@@ -18,19 +18,23 @@ export interface JobPosting {
     qualifications: Qualification[];
     applications?: Array<{
         id: number;
-        user: {
+        seeker: {
             id: number;
-            name: string;
-            email: string;
-        };
-        profile: {
+            user_id: number;
             full_name: string;
             age?: number;
             avatar_url?: string;
             cv_url?: string;
+            bio?: string;
+            user: {
+                id: number;
+                name: string;
+                email: string;
+            };
         };
         status: 'pending' | 'accepted' | 'rejected';
         applied_at: string;
+        created_at: string;
     }>;
     created_at: string;
     updated_at?: string;
@@ -248,6 +252,111 @@ export const deleteJobPosting = async (id: string | number): Promise<void> => {
         if (!response.ok) {
             throw new Error(data.message || 'Failed to delete job posting');
         }
+    } catch (error) {
+        throw error;
+    }
+};
+
+// Get applicant by ID (fetches job posting with all applicants, filtered on client side)
+export const getApplicantById = async (jobPostingId: string | number) => {
+    const token = getToken();
+    if (!token) {
+        console.error('No token found');
+        throw new Error('No authentication token found');
+    }
+
+    console.log('=== getApplicantById called ===');
+    console.log('Job Posting ID:', jobPostingId);
+    console.log('Token:', token.substring(0, 20) + '...');
+
+    const url = `${API_BASE_URL}/company/job-postings/${jobPostingId}`;
+    console.log('Fetching URL:', url);
+
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+            },
+        });
+
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers.get('content-type'));
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('Non-JSON response:', text.substring(0, 500));
+            throw new Error('Server returned non-JSON response. Please check if the backend API is running.');
+        }
+
+        const data = await response.json();
+        console.log('Response data:', data);
+
+        if (!response.ok) {
+            console.error('API Error:', data);
+            throw new Error(data.message || 'Failed to fetch job posting');
+        }
+
+        // Return the job_posting with applications
+        return data.data.job_posting;
+    } catch (error) {
+        console.error('Exception in getApplicantById:', error);
+        throw error;
+    }
+};
+
+// Accept applicant
+export const acceptApplicant = async (applicationId: string | number) => {
+    const token = getToken();
+    if (!token) throw new Error('No authentication token found');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/company/applicants/${applicationId}/accept`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+            },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to accept applicant');
+        }
+
+        return data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+// Reject applicant
+export const rejectApplicant = async (applicationId: string | number) => {
+    const token = getToken();
+    if (!token) throw new Error('No authentication token found');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/company/applicants/${applicationId}/reject`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+            },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to reject applicant');
+        }
+
+        return data;
     } catch (error) {
         throw error;
     }

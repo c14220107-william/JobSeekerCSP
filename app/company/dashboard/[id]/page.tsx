@@ -6,7 +6,7 @@ import Link from 'next/link';
 import CompanyNavbar from '@/app/components/CompanyNavbar';
 import ApplicantCard from '@/app/components/company/ApplicantCard';
 import Toast from '@/app/components/Toast';
-import { getJobPostingById, deleteJobPosting, JobPosting } from '@/app/services/jobPostingService';
+import { getJobPostingById, deleteJobPosting, acceptApplicant, rejectApplicant, JobPosting } from '@/app/services/jobPostingService';
 
 export default function JobPostingDetail() {
   const router = useRouter();
@@ -71,8 +71,8 @@ export default function JobPostingDetail() {
     setShowConfirmModal({ show: false, type: 'accept', applicantId: null });
 
     try {
-      // TODO: API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call API to accept applicant
+      await acceptApplicant(applicantId);
 
       // Update state
       setJobPosting(prev => prev ? {
@@ -82,10 +82,10 @@ export default function JobPostingDetail() {
         )
       } : null);
 
-      setToast({ show: true, message: `${applicant.profile.full_name} has been accepted!`, type: 'success' });
+      setToast({ show: true, message: `${applicant.seeker?.full_name || 'Applicant'} has been accepted!`, type: 'success' });
     } catch (error) {
       console.error('Error accepting applicant:', error);
-      setToast({ show: true, message: 'Failed to accept applicant. Please try again.', type: 'error' });
+      setToast({ show: true, message: error instanceof Error ? error.message : 'Failed to accept applicant. Please try again.', type: 'error' });
     }
   };
 
@@ -105,8 +105,8 @@ export default function JobPostingDetail() {
     setShowConfirmModal({ show: false, type: 'reject', applicantId: null });
 
     try {
-      // TODO: API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call API to reject applicant
+      await rejectApplicant(applicantId);
 
       setJobPosting(prev => prev ? {
         ...prev,
@@ -115,10 +115,10 @@ export default function JobPostingDetail() {
         )
       } : null);
 
-      setToast({ show: true, message: `${applicant.profile.full_name} has been rejected.`, type: 'success' });
+      setToast({ show: true, message: `${applicant.seeker?.full_name || 'Applicant'} has been rejected.`, type: 'success' });
     } catch (error) {
       console.error('Error rejecting applicant:', error);
-      setToast({ show: true, message: 'Failed to reject applicant. Please try again.', type: 'error' });
+      setToast({ show: true, message: error instanceof Error ? error.message : 'Failed to reject applicant. Please try again.', type: 'error' });
     }
   };
 
@@ -224,8 +224,8 @@ export default function JobPostingDetail() {
                     Are you sure you want to {showConfirmModal.type} this applicant?
                   </p>
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="font-semibold text-gray-900">{applicant.profile.full_name}</p>
-                    <p className="text-sm text-gray-600">{applicant.user.email}</p>
+                    <p className="font-semibold text-gray-900">{applicant.seeker?.full_name || 'Unknown'}</p>
+                    <p className="text-sm text-gray-600">{applicant.seeker?.user?.email || 'No email'}</p>
                   </div>
                 </div>
               )}

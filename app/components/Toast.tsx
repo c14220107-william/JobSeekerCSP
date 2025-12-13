@@ -37,7 +37,8 @@ export default function Toast({ show, message, type, onClose }: ToastProps) {
                         clearInterval(timerRef.current);
                         timerRef.current = null;
                     }
-                    onClose();
+                    // Defer onClose to avoid updating parent during render
+                    setTimeout(() => onClose(), 0);
                     return 0;
                 }
                 return nextProgress;

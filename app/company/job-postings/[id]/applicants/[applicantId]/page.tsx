@@ -6,6 +6,7 @@ import Image from 'next/image';
 import CompanyNavbar from '@/app/components/CompanyNavbar';
 import LoadingSpinner from '@/app/components/company/LoadingSpinner';
 import Toast from '@/app/components/Toast';
+import { getApplicantById, acceptApplicant, rejectApplicant } from '@/app/services/jobPostingService';
 
 /**
  * Applicant Profile Detail Page
@@ -19,34 +20,54 @@ import Toast from '@/app/components/Toast';
  * - Modern JavaScript: Template literals, optional chaining
  */
 
+// Helper function - Convert Laravel storage path to full URL
+const getStorageUrl = (path: string | undefined | null): string | null => {
+  if (!path) return null;
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  return `http://127.0.0.1:8000${path}`;
+};
+
 interface ApplicantProfile {
-  id: number;
-  user: {
+  id: string; // UUID string
+  seeker: {
     id: number;
-    name: string;
-    email: string;
-  };
-  profile: {
-    full_name: string;
+    user_id: number;
+    full_name: string;      // Profile fields directly here
     age?: number;
     bio?: string;
     cv_url?: string;
     avatar_url?: string;
+    user: {
+      id: number;
+      name: string;
+      email: string;
+    };
   };
   status: 'pending' | 'accepted' | 'rejected';
   applied_at: string;
+  created_at: string;
 }
 
 interface JobPosting {
-  id: number;
+  id: string; // UUID string
   title: string;
 }
 
 export default function ApplicantProfileDetail() {
   const params = useParams();
   const router = useRouter();
-  const jobPostingId = Number(params?.id);
-  const applicantId = Number(params?.applicantId);
+  
+  console.log('=== Component Mounted ===');
+  console.log('Raw params:', params);
+  
+  // IDs are UUID strings, not numbers
+  const jobPostingId = params?.id as string;
+  const applicantId = params?.applicantId as string;
+  
+  console.log('Parsed jobPostingId:', jobPostingId);
+  console.log('Parsed applicantId:', applicantId);
 
   // useState Hooks - State Management
   const [loading, setLoading] = useState(true);
@@ -58,47 +79,75 @@ export default function ApplicantProfileDetail() {
   // useEffect Hook - Data fetching on mount
   useEffect(() => {
     const loadData = async () => {
+      console.log('=== useEffect loadData called ===');
+      console.log('Job Posting ID:', jobPostingId);
+      console.log('Applicant ID:', applicantId);
+      
       try {
-        // TODO: Replace with actual API calls
-        // const [applicantRes, jobRes] = await Promise.all([
-        //   fetch(`/api/company/applications/${applicantId}`),
-        //   fetch(`/api/company/job-postings/${jobPostingId}`)
-        // ]);
-
-        // Mock data
-        setTimeout(() => {
-          setJobPosting({
-            id: jobPostingId,
-            title: 'Senior Software Engineer'
+        setLoading(true);
+        
+        // Backend endpoint expects job posting ID, not application ID
+        // So we fetch by jobPostingId and then find the application
+        const response = await getApplicantById(jobPostingId);
+        
+        console.log('Full API Response:', response);
+        console.log('Applicant ID we are looking for:', applicantId);
+        
+        // Backend returns: { success: true, data: { applicants: JobPosting } }
+        const jobPostingData = response;
+        
+        console.log('Job Posting Data:', jobPostingData);
+        console.log('Applications:', jobPostingData?.applications);
+        
+        // Find the specific application by applicantId (UUID string comparison)
+        if (jobPostingData && jobPostingData.applications && Array.isArray(jobPostingData.applications)) {
+          const application = jobPostingData.applications.find((app: any) => String(app.id) === String(applicantId));
+          
+          console.log('Found application:', application);
+          
+          if (application) {
+            setApplicant(application);
+            setJobPosting({
+              id: jobPostingData.id,
+              title: jobPostingData.title
+            });
+            setLoading(false);
+          } else {
+            console.error('Application not found. Available application IDs:', 
+              jobPostingData.applications.map((a: any) => a.id));
+            setToast({
+              show: true,
+              message: `Applicant ID ${applicantId} not found in this job posting`,
+              type: 'error'
+            });
+            setLoading(false);
+          }
+        } else {
+          console.error('Invalid data structure:', jobPostingData);
+          setToast({
+            show: true,
+            message: 'Invalid data structure received from server',
+            type: 'error'
           });
-
-          setApplicant({
-            id: applicantId,
-            user: {
-              id: 1,
-              name: 'John Doe',
-              email: 'john.doe@email.com'
-            },
-            profile: {
-              full_name: 'John Doe',
-              age: 28,
-              bio: 'Experienced software engineer with 5+ years in full-stack development. Passionate about building scalable web applications and learning new technologies. Proficient in React, Node.js, and cloud infrastructure.',
-              avatar_url: 'https://via.placeholder.com/200',
-              cv_url: '/uploads/cv/john-doe.pdf'
-            },
-            status: 'pending',
-            applied_at: new Date(Date.now() - 86400000).toISOString()
-          });
-
           setLoading(false);
-        }, 500);
+        }
       } catch (error) {
         console.error('Error loading applicant:', error);
+        setToast({
+          show: true,
+          message: error instanceof Error ? error.message : 'Failed to load applicant data',
+          type: 'error'
+        });
         setLoading(false);
       }
     };
 
-    loadData();
+    if (applicantId && jobPostingId) {
+      loadData();
+    } else {
+      console.error('Missing required IDs:', { applicantId, jobPostingId });
+      setLoading(false);
+    }
   }, [applicantId, jobPostingId]);
 
   // Event Handler - Show accept confirmation
@@ -113,17 +162,15 @@ export default function ApplicantProfileDetail() {
     setShowConfirmModal({ show: false, type: 'accept' });
 
     try {
-      // TODO: API call
-      // await fetch(`/api/company/applications/${applicantId}/accept`, { method: 'POST' });
-
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call API to accept applicant
+      await acceptApplicant(applicantId);
 
       setApplicant(prev => prev ? { ...prev, status: 'accepted' } : null);
 
-      setToast({ show: true, message: `${applicant.profile.full_name} has been accepted!`, type: 'success' });
+      setToast({ show: true, message: `${applicant.seeker?.full_name || 'Applicant'} has been accepted!`, type: 'success' });
     } catch (error) {
       console.error('Error accepting applicant:', error);
-      setToast({ show: true, message: 'Failed to accept applicant. Please try again.', type: 'error' });
+      setToast({ show: true, message: error instanceof Error ? error.message : 'Failed to accept applicant. Please try again.', type: 'error' });
     }
   };
 
@@ -139,17 +186,15 @@ export default function ApplicantProfileDetail() {
     setShowConfirmModal({ show: false, type: 'reject' });
 
     try {
-      // TODO: API call
-      // await fetch(`/api/company/applications/${applicantId}/reject`, { method: 'POST' });
-
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call API to reject applicant
+      await rejectApplicant(applicantId);
 
       setApplicant(prev => prev ? { ...prev, status: 'rejected' } : null);
 
-      setToast({ show: true, message: `${applicant.profile.full_name} has been rejected.`, type: 'success' });
+      setToast({ show: true, message: `${applicant.seeker?.full_name || 'Applicant'} has been rejected.`, type: 'success' });
     } catch (error) {
       console.error('Error rejecting applicant:', error);
-      setToast({ show: true, message: 'Failed to reject applicant. Please try again.', type: 'error' });
+      setToast({ show: true, message: error instanceof Error ? error.message : 'Failed to reject applicant. Please try again.', type: 'error' });
     }
   };
 
@@ -217,7 +262,7 @@ export default function ApplicantProfileDetail() {
               {showConfirmModal.type === 'accept' ? 'Accept This Applicant?' : 'Reject This Applicant?'}
             </h3>
             <p className="text-gray-700 font-sans mb-2">
-              You are about to {showConfirmModal.type} <span className="font-semibold">{applicant.profile.full_name}</span>
+              You are about to {showConfirmModal.type} <span className="font-semibold">{applicant.seeker?.full_name || 'this applicant'}</span>
               {showConfirmModal.type === 'accept' ? ' for this position.' : '.'}
             </p>
             <div className="flex gap-4 mt-6">
@@ -258,16 +303,17 @@ export default function ApplicantProfileDetail() {
             <div className="flex items-start -mt-16">
               {/* Avatar */}
               <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-200 flex-shrink-0">
-                {applicant.profile.avatar_url ? (
+                {getStorageUrl(applicant.seeker?.avatar_url) ? (
                   <Image
-                    src={applicant.profile.avatar_url}
-                    alt={applicant.profile.full_name}
+                    src={getStorageUrl(applicant.seeker.avatar_url)!}
+                    alt={`${applicant.seeker?.full_name || 'Applicant'} profile picture`}
                     fill
                     className="object-cover"
+                    unoptimized
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-[#FF851A] text-white font-bold text-4xl font-sora">
-                    {applicant.profile.full_name.charAt(0).toUpperCase()}
+                    {applicant.seeker?.full_name?.charAt(0).toUpperCase() || 'U'}
                   </div>
                 )}
               </div>
@@ -277,12 +323,12 @@ export default function ApplicantProfileDetail() {
                 <div className="flex items-start justify-between">
                   <div>
                     <h1 className="text-3xl font-bold text-black font-sora">
-                      {applicant.profile.full_name}
+                      {applicant.seeker?.full_name || 'Unknown'}
                     </h1>
-                    <p className="text-gray-600 font-sans mt-1">{applicant.user.email}</p>
+                    <p className="text-gray-600 font-sans mt-1">{applicant.seeker?.user?.email || 'No email'}</p>
                     {/* Conditional Rendering - Age */}
-                    {applicant.profile.age && (
-                      <p className="text-gray-500 font-sans mt-1">Age: {applicant.profile.age} years</p>
+                    {applicant.seeker?.age && (
+                      <p className="text-gray-500 font-sans mt-1">Age: {applicant.seeker.age} years</p>
                     )}
                   </div>
 
@@ -310,19 +356,19 @@ export default function ApplicantProfileDetail() {
         </div>
 
         {/* Bio Section - Conditional Rendering */}
-        {applicant.profile.bio && (
+        {applicant.seeker?.bio && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 className="text-xl font-bold text-black font-sora mb-4">About</h2>
-            <p className="text-gray-700 font-sans leading-relaxed">{applicant.profile.bio}</p>
+            <p className="text-gray-700 font-sans leading-relaxed">{applicant.seeker.bio}</p>
           </div>
         )}
 
         {/* CV Section - Conditional Rendering */}
-        {applicant.profile.cv_url && (
+        {getStorageUrl(applicant.seeker?.cv_url) && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 className="text-xl font-bold text-black font-sora mb-4">Curriculum Vitae</h2>
             <a
-              href={applicant.profile.cv_url}
+              href={getStorageUrl(applicant.seeker.cv_url)!}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 bg-gray-600 text-white font-sans font-semibold rounded-lg hover:bg-gray-700 hover:scale-105 transition-all duration-200"
