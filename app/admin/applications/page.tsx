@@ -6,6 +6,8 @@ import PageHeader from '@/app/components/admin/PageHeader';
 import SearchBar from '@/app/components/admin/SearchBar';
 import StatCard from '@/app/components/admin/StatCard';
 import LoadingSpinner from '@/app/components/company/LoadingSpinner';
+import Swal from 'sweetalert2';
+import { getAllApplications, Application as APIApplication } from '@/app/services/adminService';
 
 interface Application {
   id: number;
@@ -37,78 +39,74 @@ export default function AdminApplications() {
 
   const loadData = async () => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/admin/applications');
-      // const data = await response.json();
-      // setApplications(data.data.applications);
+      setLoading(true);
       
-      // Mock data
-      setTimeout(() => {
-        setApplications([
-          {
-            id: 1,
-            seeker: {
-              id: 1,
-              name: 'John Doe',
-              email: 'john.doe@email.com',
-              profile: {
-                phone: '08123456789',
-                cv_path: '/uploads/cv/john-doe.pdf'
-              }
-            },
-            jobPosting: {
-              id: 1,
-              title: 'Senior Software Engineer',
-              company: {
-                company_name: 'Tech Solutions Indonesia'
-              }
-            },
-            status: 'pending',
-            applied_at: new Date(Date.now() - 86400000).toISOString()
-          },
-          {
-            id: 2,
-            seeker: {
-              id: 2,
-              name: 'Jane Smith',
-              email: 'jane.smith@email.com',
-              profile: {
-                phone: '08234567890'
-              }
-            },
-            jobPosting: {
-              id: 2,
-              title: 'Digital Marketing Specialist',
-              company: {
-                company_name: 'Digital Marketing Pro'
-              }
-            },
-            status: 'reviewed',
-            applied_at: new Date(Date.now() - 172800000).toISOString()
-          },
-          {
-            id: 3,
-            seeker: {
-              id: 3,
-              name: 'Michael Johnson',
-              email: 'michael.j@email.com',
-              profile: {}
-            },
-            jobPosting: {
-              id: 1,
-              title: 'Senior Software Engineer',
-              company: {
-                company_name: 'Tech Solutions Indonesia'
-              }
-            },
-            status: 'accepted',
-            applied_at: new Date(Date.now() - 259200000).toISOString()
+      // Fetch data from API
+      const applicationsData = await getAllApplications();
+      
+      console.log('Applications from API:', applicationsData);
+      console.log('Total applications fetched:', applicationsData.length);
+      
+      // Debug: Check first item structure
+      if (applicationsData.length > 0) {
+        console.log('First application structure:', applicationsData[0]);
+        console.log('First application seeker:', applicationsData[0].seeker);
+        console.log('First application jobPosting:', applicationsData[0].jobPosting);
+      }
+      
+      // Transform data to match component structure - with relaxed filter
+      const transformedApplications: Application[] = applicationsData
+        .map((app: APIApplication, index: number) => {
+          console.log(`Processing application ${index}:`, app);
+          
+          // Check for missing data but don't filter out, just use fallbacks
+          if (!app.seeker) {
+            console.warn(`Application ${app.id} missing seeker data`);
           }
-        ]);
-        setLoading(false);
-      }, 500);
+          if (!app.jobPosting) {
+            console.warn(`Application ${app.id} missing jobPosting data`);
+          }
+          
+          return {
+            id: app.id,
+            seeker: {
+              id: app.seeker?.id || 0,
+              name: app.seeker?.user?.name || app.seeker?.full_name || 'N/A',
+              email: app.seeker?.user?.email || 'N/A',
+              profile: {
+                phone: app.seeker?.phone,
+                cv_path: app.seeker?.cv_url
+              }
+            },
+            jobPosting: {
+              id: app.jobPosting?.id ? (typeof app.jobPosting.id === 'string' ? 0 : app.jobPosting.id) : 0,
+              title: app.jobPosting?.title || 'N/A',
+              company: {
+                company_name: app.jobPosting?.company?.name || 'N/A'
+              }
+            },
+            status: app.status || 'pending',
+            applied_at: app.created_at
+          };
+        });
+      
+      console.log('Transformed applications:', transformedApplications);
+      console.log('Total transformed:', transformedApplications.length);
+      
+      setApplications(transformedApplications);
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching applications:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: error instanceof Error ? error.message : 'Failed to load applications. Please try again.',
+        confirmButtonColor: '#EF4444',
+        customClass: {
+          confirmButton: 'font-sans font-semibold px-6 py-2.5 rounded-lg',
+          title: 'font-sora text-2xl'
+        }
+      });
       setLoading(false);
     }
   };

@@ -3,14 +3,29 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { logoutUser } from '@/app/apiServices';
 
 export default function AdminNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   const isActive = (path: string) => {
     return pathname === path;
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force logout even if API fails
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      router.push('/');
+    }
   };
 
   return (
@@ -71,8 +86,9 @@ export default function AdminNavbar() {
           Applications
         </Link>
         
-        {/* TODO: Add Logout button when auth is ready */}
+        {/* Logout button */}
         <button
+          onClick={handleLogout}
           className="bg-red-600 hover:bg-red-700 hover:scale-105 text-white px-6 py-2 rounded-lg font-sans font-semibold transition-all duration-200"
         >
           Logout
@@ -157,6 +173,7 @@ export default function AdminNavbar() {
           </Link>
           
           <button
+            onClick={handleLogout}
             className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-sans font-semibold transition-colors duration-200"
           >
             Logout

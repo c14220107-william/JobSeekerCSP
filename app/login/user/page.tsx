@@ -97,6 +97,31 @@ export default function UserLoginPage() {
                     throw new Error('This email is registered as a company account. Please use the company login page.')
                 }
 
+                // Check if admin and redirect to admin panel
+                if (user?.role === 'admin') {
+                    // Save admin data to localStorage
+                    saveUserData({
+                        full_name: user?.name || user?.full_name || 'Admin',
+                        email: user?.email || '',
+                        token: token,
+                        user_id: user?.id,
+                        role: 'admin'
+                    })
+
+                    // Show success toast
+                    setToast({
+                        show: true,
+                        message: 'Login successful! Welcome Admin.',
+                        type: 'success'
+                    })
+
+                    // Redirect to admin dashboard
+                    setTimeout(() => {
+                        router.push('/admin/dashboard')
+                    }, 1500)
+                    return
+                }
+
                 // Save user data with profile info to localStorage
                 saveUserData({
                     full_name: profile?.full_name || '',

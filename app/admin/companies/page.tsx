@@ -12,7 +12,10 @@ import TabNavigation from '@/app/components/admin/TabNavigation';
 import LoadingSpinner from '@/app/components/company/LoadingSpinner';
 import PageHeader from '@/app/components/company/PageHeader';
 
-// TypeScript Interfaces
+// Import Admin Service
+import { getPendingCompanies, getApprovedCompanies, approveCompany, rejectCompany, CompanyUser } from '@/app/services/adminService';
+
+// TypeScript Interfaces - Updated to match backend structure
 interface Company {
   id: number;
   user: {
@@ -24,7 +27,7 @@ interface Company {
   company_name: string;
   company_city: string;
   company_description: string;
-  company_image_url?: string;
+  image_url?: string;
   is_approved: boolean;
   created_at: string;
 }
@@ -42,53 +45,76 @@ export default function AdminCompanies() {
 
   const loadData = async () => {
     try {
-      // TODO: Replace with actual API calls
-      // const [pendingRes, approvedRes] = await Promise.all([
-      //   fetch('/api/admin/companies/pending'),
-      //   fetch('/api/admin/companies/approved')
-      // ]);
+      setLoading(true);
       
-      // Mock data
-      setTimeout(() => {
-        setPendingCompanies([
-          {
-            id: 1,
-            user: { id: 10, name: 'PT Tech Solutions', email: 'contact@techsolutions.com', is_approved: false },
-            company_name: 'Tech Solutions Indonesia',
-            company_city: 'Jakarta',
-            company_description: 'Leading technology company in Indonesia',
-            company_image_url: 'https://via.placeholder.com/150',
-            is_approved: false,
-            created_at: new Date().toISOString()
+      // Fetch data from API
+      const [pendingRes, approvedRes] = await Promise.all([
+        getPendingCompanies(),
+        getApprovedCompanies()
+      ]);
+
+      console.log('Pending companies from API:', pendingRes);
+      console.log('Approved companies from API:', approvedRes);
+
+      // Transform data to match component structure - filter out users without company data
+      const transformedPending: Company[] = pendingRes
+        .filter((user: CompanyUser) => user.company != null)
+        .map((user: CompanyUser) => {
+          console.log('Transforming pending user:', user);
+          console.log('Company data:', user.company);
+          return {
+            id: user.company.id,
+            user: {
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              is_approved: user.is_approved
+            },
+            company_name: user.company.name || 'N/A',
+            company_city: user.company.address || 'N/A',
+            company_description: user.company.description || 'No description',
+            image_url: user.company.photo_url,
+            is_approved: user.company.is_approved,
+            created_at: user.company.created_at
+          };
+        });
+
+      const transformedApproved: Company[] = approvedRes
+        .filter((user: CompanyUser) => user.company != null)
+        .map((user: CompanyUser) => ({
+          id: user.company.id,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            is_approved: user.is_approved
           },
-          {
-            id: 2,
-            user: { id: 11, name: 'PT Digital Marketing', email: 'info@digitalmarketing.com', is_approved: false },
-            company_name: 'Digital Marketing Pro',
-            company_city: 'Bandung',
-            company_description: 'Digital marketing agency',
-            is_approved: false,
-            created_at: new Date().toISOString()
-          }
-        ]);
-        
-        setApprovedCompanies([
-          {
-            id: 3,
-            user: { id: 12, name: 'PT Startup Hub', email: 'hello@startuphub.com', is_approved: true },
-            company_name: 'Startup Hub Indonesia',
-            company_city: 'Surabaya',
-            company_description: 'Co-working space and startup incubator',
-            company_image_url: 'https://via.placeholder.com/150',
-            is_approved: true,
-            created_at: new Date().toISOString()
-          }
-        ]);
-        
-        setLoading(false);
-      }, 500);
+          company_name: user.company.name || 'N/A',
+          company_city: user.company.address || 'N/A',
+          company_description: user.company.description || 'No description',
+          image_url: user.company.photo_url,
+          is_approved: user.company.is_approved,
+          created_at: user.company.created_at
+        }));
+
+      console.log('Transformed pending:', transformedPending);
+      console.log('Transformed approved:', transformedApproved);
+
+      setPendingCompanies(transformedPending);
+      setApprovedCompanies(transformedApproved);
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching companies:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: error instanceof Error ? error.message : 'Failed to load companies. Please try again.',
+        confirmButtonColor: '#EF4444',
+        customClass: {
+          confirmButton: 'font-sans font-semibold px-6 py-2.5 rounded-lg',
+          title: 'font-sora text-2xl'
+        }
+      });
       setLoading(false);
     }
   };
@@ -130,7 +156,6 @@ export default function AdminCompanies() {
 
     if (result.isConfirmed) {
       try {
-        // Show loading
         Swal.fire({
           title: 'Processing...',
           text: 'Please wait',
@@ -140,18 +165,12 @@ export default function AdminCompanies() {
           }
         });
 
-        // TODO: Replace with actual API call
-        // await fetch(`/api/admin/companies/${company.user.id}/${action}`, {
-        //   method: 'POST'
-        // });
-
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
         if (action === 'approve') {
+          await approveCompany(company.user.id);
           setPendingCompanies(prev => prev.filter(c => c.id !== company.id));
-          setApprovedCompanies(prev => [...prev, { ...company, is_approved: true }]);
+          setApprovedCompanies(prev => [...prev, { ...company, is_approved: true, user: { ...company.user, is_approved: true } }]);
         } else {
+          await rejectCompany(company.user.id);
           setPendingCompanies(prev => prev.filter(c => c.id !== company.id));
         }
 
@@ -172,7 +191,7 @@ export default function AdminCompanies() {
         Swal.fire({
           icon: 'error',
           title: 'Error!',
-          text: 'Failed to process company. Please try again.',
+          text: error instanceof Error ? error.message : 'Failed to process company. Please try again.',
           confirmButtonColor: '#EF4444',
           customClass: {
             confirmButton: 'font-sans font-semibold px-6 py-2.5 rounded-lg',
