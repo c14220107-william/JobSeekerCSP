@@ -3,28 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import CompanyNavbar from '@/app/components/CompanyNavbar';
-
-interface Qualification {
-  id: number;
-  name: string;
-}
-
-interface FormData {
-  title: string;
-  location: string;
-  salary: string;
-  description: string;
-  tenure: string;
-  type: string;
-  status: 'open' | 'closed';
-  qualification_ids: number[];
-}
+import Toast from '@/app/components/Toast';
+import { getQualifications, createJobPosting, Qualification, CreateJobPostingData } from '@/app/services/jobPostingService';
 
 export default function CreateJobPosting() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [qualifications, setQualifications] = useState<Qualification[]>([]);
-  const [formData, setFormData] = useState<FormData>({
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'warning' }>({ show: false, message: '', type: 'success' });
+  const [formData, setFormData] = useState<CreateJobPostingData>({
     title: '',
     location: '',
     salary: '',
@@ -36,15 +23,20 @@ export default function CreateJobPosting() {
   });
 
   useEffect(() => {
-    // TODO: Fetch qualifications from API
-    // For now, mock data
-    setQualifications([
-      { id: 1, name: 'Bachelor Degree' },
-      { id: 2, name: '2+ Years Experience' },
-      { id: 3, name: 'Communication Skills' },
-      { id: 4, name: 'Leadership' },
-      { id: 5, name: 'Problem Solving' }
-    ]);
+    const loadQualifications = async () => {
+      try {
+        const data = await getQualifications();
+        setQualifications(data);
+      } catch (error) {
+        console.error('Error fetching qualifications:', error);
+        setToast({
+          show: true,
+          message: error instanceof Error ? error.message : 'Failed to load qualifications',
+          type: 'error'
+        });
+      }
+    };
+    loadQualifications();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,24 +44,26 @@ export default function CreateJobPosting() {
     setLoading(true);
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/company/job-postings', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${token}`
-      //   },
-      //   body: JSON.stringify(formData)
-      // });
-      
-      // Mock success
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Redirect to dashboard
-      router.push('/company/dashboard');
+      await createJobPosting(formData);
+
+      // Show success toast
+      setToast({
+        show: true,
+        message: 'Job posting created successfully!',
+        type: 'success'
+      });
+
+      // Redirect to dashboard after delay
+      setTimeout(() => {
+        router.push('/company/dashboard');
+      }, 1500);
     } catch (error) {
       console.error('Error creating job posting:', error);
-      alert('Failed to create job posting');
+      setToast({
+        show: true,
+        message: error instanceof Error ? error.message : 'Failed to create job posting',
+        type: 'error'
+      });
     } finally {
       setLoading(false);
     }
@@ -92,10 +86,38 @@ export default function CreateJobPosting() {
     }));
   };
 
+  const formatRupiah = (value: string) => {
+    // Remove non-numeric characters
+    const numericValue = value.replace(/[^0-9]/g, '');
+
+    // Format with thousands separator
+    if (numericValue === '') return '';
+    return new Intl.NumberFormat('id-ID').format(parseInt(numericValue));
+  };
+
+  const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const formattedValue = formatRupiah(rawValue);
+
+    setFormData(prev => ({
+      ...prev,
+      salary: formattedValue
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <CompanyNavbar />
-      
+
+      {/* Toast Notification */}
+      <Toast
+        key={toast.show ? Date.now() : 'toast'}
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, show: false })}
+      />
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
         {/* Header */}
         <div className="mb-8">
@@ -150,10 +172,11 @@ export default function CreateJobPosting() {
                   id="salary"
                   name="salary"
                   value={formData.salary}
-                  onChange={handleChange}
+                  onChange={handleSalaryChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFAD42] focus:border-transparent"
-                  placeholder="e.g. Rp 10.000.000 - Rp 15.000.000"
+                  placeholder="e.g. 10000000"
                 />
+                <p className="text-xs text-gray-500 mt-1">Enter numbers only, will be auto-formatted</p>
               </div>
             </div>
 

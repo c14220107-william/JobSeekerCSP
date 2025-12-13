@@ -6,7 +6,7 @@ import CompanyNavbar from '@/app/components/CompanyNavbar';
 import LoadingSpinner from '@/app/components/company/LoadingSpinner';
 import PageHeader from '@/app/components/company/PageHeader';
 import ApplicantCard from '@/app/components/company/ApplicantCard';
-import Swal from 'sweetalert2';
+import Toast from '@/app/components/Toast';
 
 /**
  * View Job Posting Applicants Page
@@ -56,6 +56,8 @@ export default function ViewJobApplicants() {
   const [jobPosting, setJobPosting] = useState<JobPosting | null>(null);
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' as 'success' | 'error' | 'warning' });
+  const [showConfirmModal, setShowConfirmModal] = useState<{ show: boolean; type: 'accept' | 'reject'; applicantId: number | null }>({ show: false, type: 'accept', applicantId: null });
 
   // useEffect Hook - Data fetching
   useEffect(() => {
@@ -136,140 +138,68 @@ export default function ViewJobApplicants() {
     loadData();
   }, [jobPostingId]);
 
-  // Event Handler - Accept applicant
-  const handleAccept = async (applicantId: number) => {
+  // Event Handler - Show accept confirmation
+  const handleAccept = (applicantId: number) => {
+    setShowConfirmModal({ show: true, type: 'accept', applicantId });
+  };
+
+  // Event Handler - Confirm accept applicant
+  const confirmAccept = async () => {
+    const applicantId = showConfirmModal.applicantId;
+    if (!applicantId) return;
+
     const applicant = applicants.find(a => a.id === applicantId);
     if (!applicant) return;
 
-    const result = await Swal.fire({
-      title: 'Accept Applicant?',
-      html: `
-        <div class="text-left">
-          <p class="text-gray-700 mb-3">Are you sure you want to accept this applicant?</p>
-          <div class="bg-gray-50 p-4 rounded-lg">
-            <p class="font-semibold text-gray-900">${applicant.profile.full_name}</p>
-            <p class="text-sm text-gray-600">${applicant.user.email}</p>
-          </div>
-        </div>
-      `,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#10B981',
-      cancelButtonColor: '#6B7280',
-      confirmButtonText: 'Yes, Accept!',
-      cancelButtonText: 'Cancel',
-      customClass: {
-        confirmButton: 'font-sans font-semibold px-6 py-2.5 rounded-lg',
-        cancelButton: 'font-sans font-semibold px-6 py-2.5 rounded-lg',
-        title: 'font-sora text-2xl'
-      }
-    });
+    setShowConfirmModal({ show: false, type: 'accept', applicantId: null });
 
-    if (result.isConfirmed) {
-      try {
-        Swal.fire({
-          title: 'Processing...',
-          allowOutsideClick: false,
-          didOpen: () => Swal.showLoading()
-        });
+    try {
+      // TODO: API call
+      // await fetch(`/api/company/applications/${applicantId}/accept`, { method: 'POST' });
 
-        // TODO: API call
-        // await fetch(`/api/company/applications/${applicantId}/accept`, { method: 'POST' });
-        
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // Update state
-        setApplicants(prev => prev.map(a => 
-          a.id === applicantId ? { ...a, status: 'accepted' as const } : a
-        ));
+      // Update state
+      setApplicants(prev => prev.map(a =>
+        a.id === applicantId ? { ...a, status: 'accepted' as const } : a
+      ));
 
-        Swal.fire({
-          icon: 'success',
-          title: 'Applicant Accepted!',
-          text: `${applicant.profile.full_name} has been accepted.`,
-          confirmButtonColor: '#FF851A',
-          customClass: {
-            confirmButton: 'font-sans font-semibold px-6 py-2.5 rounded-lg',
-            title: 'font-sora text-2xl'
-          }
-        });
-      } catch (error) {
-        console.error('Error accepting applicant:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error!',
-          text: 'Failed to accept applicant. Please try again.',
-          confirmButtonColor: '#EF4444'
-        });
-      }
+      setToast({ show: true, message: `${applicant.profile.full_name} has been accepted!`, type: 'success' });
+    } catch (error) {
+      console.error('Error accepting applicant:', error);
+      setToast({ show: true, message: 'Failed to accept applicant. Please try again.', type: 'error' });
     }
   };
 
-  // Event Handler - Reject applicant
-  const handleReject = async (applicantId: number) => {
+  // Event Handler - Show reject confirmation
+  const handleReject = (applicantId: number) => {
+    setShowConfirmModal({ show: true, type: 'reject', applicantId });
+  };
+
+  // Event Handler - Confirm reject applicant
+  const confirmReject = async () => {
+    const applicantId = showConfirmModal.applicantId;
+    if (!applicantId) return;
+
     const applicant = applicants.find(a => a.id === applicantId);
     if (!applicant) return;
 
-    const result = await Swal.fire({
-      title: 'Reject Applicant?',
-      html: `
-        <div class="text-left">
-          <p class="text-gray-700 mb-3">Are you sure you want to reject this applicant?</p>
-          <div class="bg-gray-50 p-4 rounded-lg">
-            <p class="font-semibold text-gray-900">${applicant.profile.full_name}</p>
-            <p class="text-sm text-gray-600">${applicant.user.email}</p>
-          </div>
-        </div>
-      `,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#EF4444',
-      cancelButtonColor: '#6B7280',
-      confirmButtonText: 'Yes, Reject!',
-      cancelButtonText: 'Cancel',
-      customClass: {
-        confirmButton: 'font-sans font-semibold px-6 py-2.5 rounded-lg',
-        cancelButton: 'font-sans font-semibold px-6 py-2.5 rounded-lg',
-        title: 'font-sora text-2xl'
-      }
-    });
+    setShowConfirmModal({ show: false, type: 'reject', applicantId: null });
 
-    if (result.isConfirmed) {
-      try {
-        Swal.fire({
-          title: 'Processing...',
-          allowOutsideClick: false,
-          didOpen: () => Swal.showLoading()
-        });
+    try {
+      // TODO: API call
+      // await fetch(`/api/company/applications/${applicantId}/reject`, { method: 'POST' });
 
-        // TODO: API call
-        // await fetch(`/api/company/applications/${applicantId}/reject`, { method: 'POST' });
-        
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-        setApplicants(prev => prev.map(a => 
-          a.id === applicantId ? { ...a, status: 'rejected' as const } : a
-        ));
+      setApplicants(prev => prev.map(a =>
+        a.id === applicantId ? { ...a, status: 'rejected' as const } : a
+      ));
 
-        Swal.fire({
-          icon: 'success',
-          title: 'Applicant Rejected!',
-          text: `${applicant.profile.full_name} has been rejected.`,
-          confirmButtonColor: '#FF851A',
-          customClass: {
-            confirmButton: 'font-sans font-semibold px-6 py-2.5 rounded-lg',
-            title: 'font-sora text-2xl'
-          }
-        });
-      } catch (error) {
-        console.error('Error rejecting applicant:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error!',
-          text: 'Failed to reject applicant. Please try again.',
-          confirmButtonColor: '#EF4444'
-        });
-      }
+      setToast({ show: true, message: `${applicant.profile.full_name} has been rejected.`, type: 'success' });
+    } catch (error) {
+      console.error('Error rejecting applicant:', error);
+      setToast({ show: true, message: 'Failed to reject applicant. Please try again.', type: 'error' });
     }
   };
 
@@ -314,7 +244,45 @@ export default function ViewJobApplicants() {
   return (
     <div className="min-h-screen bg-gray-50">
       <CompanyNavbar />
-      
+
+      {/* Toast Notification */}
+      <Toast
+        key={toast.show ? `toast-${toast.message}` : 'toast'}
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, show: false })}
+      />
+
+      {/* Confirmation Modal */}
+      {showConfirmModal.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <h3 className="text-2xl font-bold text-black font-sora mb-4">
+              {showConfirmModal.type === 'accept' ? 'Accept Applicant?' : 'Reject Applicant?'}
+            </h3>
+            <p className="text-gray-700 font-sans mb-6">
+              Are you sure you want to {showConfirmModal.type} this applicant?
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowConfirmModal({ show: false, type: 'accept', applicantId: null })}
+                className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 font-sans font-semibold rounded-lg hover:bg-gray-300 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={showConfirmModal.type === 'accept' ? confirmAccept : confirmReject}
+                className={`flex-1 px-6 py-3 text-white font-sans font-semibold rounded-lg transition ${showConfirmModal.type === 'accept' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+                  }`}
+              >
+                {showConfirmModal.type === 'accept' ? 'Accept' : 'Reject'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
         {/* Component: PageHeader */}
         <PageHeader
@@ -339,11 +307,10 @@ export default function ViewJobApplicants() {
               <button
                 key={filter.id}
                 onClick={() => setFilterStatus(filter.id as typeof filterStatus)}
-                className={`px-5 py-2 rounded-lg font-sans font-semibold transition-all duration-200 ${
-                  filterStatus === filter.id
+                className={`px-5 py-2 rounded-lg font-sans font-semibold transition-all duration-200 ${filterStatus === filter.id
                     ? 'bg-[#FF851A] text-white scale-105'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 {filter.label} ({filter.count})
               </button>
