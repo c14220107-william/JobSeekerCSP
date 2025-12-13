@@ -216,3 +216,32 @@ export const getUserProfile = async () => {
         throw error;
     }
 };
+
+// Verify admin token
+export const verifyAdminToken = async () => {
+    const token = getToken();
+    
+    if (!token) {
+        throw new Error('No token found');
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/verify`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Token verification failed');
+        }
+
+        return data;
+    } catch (error) {
+        throw error;
+    }
+};

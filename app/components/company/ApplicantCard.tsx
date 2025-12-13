@@ -15,16 +15,19 @@ import Image from 'next/image';
 interface ApplicantCardProps {
   applicant: {
     id: number;
-    user: {
+    seeker: {
       id: number;
-      name: string;
-      email: string;
-    };
-    profile: {
+      user_id: number;
       full_name: string;
       age?: number;
       avatar_url?: string;
       cv_url?: string;
+      bio?: string;
+      user: {
+        id: number;
+        name: string;
+        email: string;
+      };
     };
     status: 'pending' | 'accepted' | 'rejected';
     applied_at: string;
@@ -43,6 +46,17 @@ export default function ApplicantCard({
   showActions = true 
 }: ApplicantCardProps) {
   
+  // Helper function - Convert Laravel storage path to full URL
+  const getStorageUrl = (path: string | undefined | null): string | null => {
+    if (!path) return null;
+    // If already full URL, return as is
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    // Convert storage path to URL
+    return `http://127.0.0.1:8000${path}`;
+  };
+  
   // Helper function - Conditional styling untuk status badge
   const getStatusStyle = () => {
     const styles = {
@@ -58,16 +72,17 @@ export default function ApplicantCard({
       <div className="flex items-start gap-4">
         {/* Avatar */}
         <div className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
-          {applicant.profile.avatar_url ? (
+          {getStorageUrl(applicant.seeker?.avatar_url) ? (
             <Image
-              src={applicant.profile.avatar_url}
-              alt={applicant.profile.full_name}
+              src={getStorageUrl(applicant.seeker.avatar_url)!}
+              alt={`${applicant.seeker?.full_name || 'Applicant'} profile picture`}
               fill
               className="object-cover"
+              unoptimized
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-[#FF851A] text-white font-bold text-xl font-sora">
-              {applicant.profile.full_name.charAt(0).toUpperCase()}
+              {applicant.seeker?.full_name?.charAt(0).toUpperCase() || 'U'}
             </div>
           )}
         </div>
@@ -77,13 +92,13 @@ export default function ApplicantCard({
           <div className="flex items-start justify-between">
             <div>
               <h3 className="text-lg font-bold text-black font-sora">
-                {applicant.profile.full_name}
+                {applicant.seeker?.full_name || 'Unknown'}
               </h3>
-              <p className="text-sm text-gray-600 font-sans">{applicant.user.email}</p>
+              <p className="text-sm text-gray-600 font-sans">{applicant.seeker?.user?.email || 'No email'}</p>
               {/* Conditional Rendering - Age if available */}
-              {applicant.profile.age && (
+              {applicant.seeker?.age && (
                 <p className="text-sm text-gray-500 font-sans mt-1">
-                  Age: {applicant.profile.age} years
+                  Age: {applicant.seeker.age} years
                 </p>
               )}
             </div>
@@ -114,9 +129,9 @@ export default function ApplicantCard({
             </Link>
 
             {/* Conditional Rendering - Show CV button if available */}
-            {applicant.profile.cv_url && (
+            {getStorageUrl(applicant.seeker?.cv_url) && (
               <a
-                href={applicant.profile.cv_url}
+                href={getStorageUrl(applicant.seeker.cv_url)!}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-4 py-2 bg-gray-600 text-white font-sans font-semibold rounded-lg hover:bg-gray-700 hover:scale-105 transition-all duration-200"
