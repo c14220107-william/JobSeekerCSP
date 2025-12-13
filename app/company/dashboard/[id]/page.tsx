@@ -8,6 +8,28 @@ import ApplicantCard from '@/app/components/company/ApplicantCard';
 import Toast from '@/app/components/Toast';
 import { getJobPostingById, deleteJobPosting, acceptApplicant, rejectApplicant, JobPosting } from '@/app/services/jobPostingService';
 
+// Define Applicant type to match service structure
+interface Applicant {
+  id: number;
+  seeker: {
+    id: number;
+    user_id: number;
+    full_name: string;
+    age?: number;
+    avatar_url?: string;
+    cv_url?: string;
+    bio?: string;
+    user: {
+      id: number;
+      name: string;
+      email: string;
+    };
+  };
+  status: 'pending' | 'accepted' | 'rejected';
+  applied_at: string;
+  created_at: string;
+}
+
 export default function JobPostingDetail() {
   const router = useRouter();
   const params = useParams();

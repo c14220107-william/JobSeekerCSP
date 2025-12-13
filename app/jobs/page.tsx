@@ -1,36 +1,13 @@
 'use client'
 
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import Card from "../components/Card";
 import Footer from "../components/Footer";
+import { GlobalContext } from "../providers/DataProvider";
 
 export default function JobPage() {
-    const data = React.useMemo(() => [
-        {
-            _id: "64a7f4e2f1d2c3b5e6a7b8c9",
-            title: "Frontend Developer",
-            company_name: "Tech Solutions",
-            company_city: "New York",
-            job_qualification: "Bachelor's Degree in Computer Science",
-            job_type: "remote",
-            job_tenure: "full-time",
-            job_description: "We are looking for a skilled Frontend Developer to join our team...",
-            salary_min: 6000000,
-            salary_max: 12000000,
-        },
-        {
-            _id: "64a7f4e2f1d2c3b5e6a7b8d0",
-            title: "Backend Developer",
-            company_name: "DEX Solutions",
-            company_city: "Rungkut City",
-            job_qualification: "Bachelor's Degree in Computer Science",
-            job_type: "remote",
-            job_tenure: "full-time",
-            job_description: "Join our backend team to build scalable web applications...",
-            salary_min: 7000000,
-            salary_max: 13000000,
-        },
-    ], []);
+    const context = useContext(GlobalContext);
+    const { data } = context || { data: [] };
     const [searchQuery, setSearchQuery] = useState("");
     const [filterType, setFilterType] = useState("all");
     const [filterTenure, setFilterTenure] = useState("all");
@@ -88,6 +65,24 @@ export default function JobPage() {
         e.preventDefault();
 
     };
+
+    if (!context) {
+        return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <p className="text-gray-600">Error loading data provider.</p>
+        </div>;
+    }
+
+    // Show loading if no data yet
+    if (data.length === 0) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading jobs...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -205,7 +200,7 @@ export default function JobPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {Array.isArray(displayedJobs) && displayedJobs.length > 0 ? (
                             displayedJobs.map((job) => (
-                                <Card key={job._id} job={job} />
+                                <Card key={job.id} job={job} />
                             ))
                         ) : (
                             <div className="col-span-full text-center py-12">

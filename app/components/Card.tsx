@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 interface Job {
-  _id: string;
+  id: string;
   title: string;
   company_name: string;
   company_city: string;
@@ -35,15 +35,21 @@ export default function Card({ job }: CardProps) {
     <div className="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
       {/* Company Image */}
       <div className="h-40 overflow-hidden bg-gray-100">
-        <img
-          src={job.company_image_url}
-          alt={job.company_name}
-          className="w-full h-full object-cover"
-          onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-            e.currentTarget.src =
-              "https://via.placeholder.com/400x200?text=Company+Logo";
-          }}
-        />
+        {job.company_image_url && job.company_image_url.trim() !== '' ? (
+          <img
+            src={job.company_image_url}
+            alt={job.company_name}
+            className="w-full h-full object-cover"
+            onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+              e.currentTarget.src =
+                "https://via.placeholder.com/400x200?text=Company+Logo";
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-200">
+            <span className="text-gray-500 text-sm">No Image</span>
+          </div>
+        )}
       </div>
 
       <div className="p-5">

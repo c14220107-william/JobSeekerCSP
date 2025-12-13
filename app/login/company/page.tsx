@@ -1,12 +1,12 @@
 'use client'
 
 import Image from "next/image"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { loginUser, registerCompany, saveUserData } from "@/app/apiServices"
 import Toast from "@/app/components/Toast"
 
-export default function UserLoginPage() {
+function UserLoginPageContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const [isLogin, setIsLogin] = useState(true)
@@ -112,6 +112,7 @@ export default function UserLoginPage() {
                         show: true,
                         message: 'Your company account is pending approval from admin. Please wait for approval.',
                         type: 'warning'
+
                     })
                     setIsLoading(false)
                     return
@@ -445,4 +446,12 @@ export default function UserLoginPage() {
             </div>
         </div>
     </div>
+}
+
+export default function UserLoginPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <UserLoginPageContent />
+        </Suspense>
+    )
 }
