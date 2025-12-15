@@ -372,7 +372,7 @@ export default function EditJobPosting() {
                       onChange={() => handleQualificationToggle(qual.id)}
                       className="w-4 h-4 text-[#FFAD42] focus:ring-[#FFAD42] border-gray-300 rounded"
                     />
-                    <span className="text-sm text-gray-700">{qual.name}</span>
+                    <span className="text-sm text-gray-700">{qual.skill}</span>
                   </label>
                 ))}
               </div>

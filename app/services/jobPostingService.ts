@@ -3,7 +3,7 @@ const API_BASE_URL = 'http://127.0.0.1:8000/api';
 // Types
 export interface Qualification {
     id: number;
-    name: string;
+    skill: string;
 }
 
 export interface JobPosting {

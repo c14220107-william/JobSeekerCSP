@@ -20,16 +20,16 @@ export default function JobPage() {
         return data.filter((job) => {
             const matchesSearch =
                 job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                job.company_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                job.company_city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                job.job_qualification.toLowerCase().includes(searchQuery.toLowerCase());
+                job.company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                job.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                job.qualifications.some(qual => qual.skill.toLowerCase().includes(searchQuery.toLowerCase()));
 
             const matchesType =
                 filterType === "all" ||
-                job.job_type.toLowerCase() === filterType.toLowerCase();
+                job.type.toLowerCase() === filterType.toLowerCase();
             const matchesTenure =
                 filterTenure === "all" ||
-                job.job_tenure.toLowerCase() === filterTenure.toLowerCase();
+                job.tenure.toLowerCase() === filterTenure.toLowerCase();
 
             return matchesSearch && matchesType && matchesTenure;
         });
