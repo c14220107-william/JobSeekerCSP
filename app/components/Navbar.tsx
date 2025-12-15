@@ -230,7 +230,7 @@ const NavbarComponent = () => {
                   </div>
                   <div className="flex flex-col gap-2">
                     <Link
-                      href={user.role === 'company' ? '/company/dashboard' : '/jobs'}
+                      href="/company/dashboard"
                       className="flex items-center gap-2 text-white px-3 py-2 rounded hover:bg-white/10"
                       onClick={() => setIsMenuOpen(false)}
                     >
@@ -240,15 +240,27 @@ const NavbarComponent = () => {
                       Dashboard
                     </Link>
                     <Link
-                      href="/profile/edit"
+                      href="/company/profile/edit"
                       className="flex items-center gap-2 text-white px-3 py-2 rounded hover:bg-white/10"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
-                      Edit Profile
+                      Edit Company Profile
                     </Link>
+                    {user.role !== 'company' && (
+                      <Link
+                        href="/profile/edit"
+                        className="flex items-center gap-2 text-white px-3 py-2 rounded hover:bg-white/10"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        Edit Profile
+                      </Link>
+                    )}
                     <button
                       onClick={handleLogout}
                       className="flex items-center gap-2 text-red-400 px-3 py-2 rounded hover:bg-white/10 text-left"

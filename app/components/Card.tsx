@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { getUserData } from "@/app/apiServices";
+import { applyToJob } from "@/app/apiServices";
+import Toast from "@/app/components/Toast";
 
 interface Job {
   id: string;
@@ -44,6 +47,9 @@ interface CardProps {
 
 export default function Card({ job }: CardProps) {
   const [hoveredJobDesc, setHoveredJobDesc] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [applied, setApplied] = useState(job.status !== "open" ? true : false);
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({ show: false, message: '', type: 'success' });
 
   const formatSalary = (salary: string) => {
     if (!salary) return "N/A";
@@ -187,14 +193,42 @@ export default function Card({ job }: CardProps) {
           )}
         </div>
 
-        {job.status === "open" ? (
-          <button className="mt-4 w-full bg-[#FF851A] hover:bg-orange-600 text-white font-medium py-2 px-4 rounded transition duration-300">
-            Apply Now
+        {applied ? (
+          <button disabled className="mt-4 w-full !bg-gray-400 text-white font-medium py-2 px-4 rounded transition duration-300">
+            {job.status === 'open' ? 'Applied' : 'Closed'}
           </button>
         ) : (
-          <button className="mt-4 w-full !bg-gray-400 text-white font-medium py-2 px-4 rounded transition duration-300">
-            Closed
-          </button>
+          <>
+            <Toast show={toast.show} message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />
+            <button
+              onClick={async () => {
+                const user = getUserData();
+                if (!user || user.role !== 'user') {
+                  setToast({ show: true, message: 'Please login as a job seeker to apply', type: 'error' });
+                  return;
+                }
+
+                setApplying(true);
+                try {
+                  await applyToJob(job.id);
+                  setToast({ show: true, message: 'Application submitted!', type: 'success' });
+                  setApplied(true);
+                } catch (err) {
+                  setToast({ show: true, message: err instanceof Error ? err.message : 'Failed to apply', type: 'error' });
+                } finally {
+                  setApplying(false);
+                }
+              }}
+              className="mt-4 w-full bg-[#FF851A] hover:bg-orange-600 text-white font-medium py-2 px-4 rounded transition duration-300 flex items-center justify-center"
+              disabled={applying}
+            >
+              {applying ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              ) : (
+                'Apply Now'
+              )}
+            </button>
+          </>
         )}
       </div>
     </div>
