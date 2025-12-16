@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getUserData, getCompanyProfile, updateCompanyProfile } from '@/app/apiServices'
 import Toast from '@/app/components/Toast'
+import CompanyNavbar from '@/app/components/CompanyNavbar'
 
 export default function EditCompanyProfilePage() {
     const router = useRouter()
@@ -112,6 +113,7 @@ export default function EditCompanyProfilePage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <CompanyNavbar />
             <Toast show={toast.show} message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />
 
             <section className="bg-[url('/bg-polos.png')] bg-cover bg-center py-[100px]">

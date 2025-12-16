@@ -31,7 +31,7 @@ const NavbarComponent = () => {
     return () => clearInterval(interval);
   }, []);
 
-  if (pathname == '/login/company' || pathname == '/login/user') {
+  if (pathname == '/login/company' || pathname == '/login/user' || pathname?.startsWith('/company') || pathname?.startsWith('/admin')) {
     return null;
   }
   const handleLogout = async () => {

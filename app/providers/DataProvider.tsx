@@ -2,6 +2,7 @@
 
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import axios from "axios";
+import { getUserData, getToken } from "@/app/apiServices";
 
 interface Job {
     id: string;
@@ -16,6 +17,7 @@ interface Job {
     created_at: string;
     updated_at: string;
     applications_count: number;
+    is_applied?: boolean;
     company: {
         id: string;
         user_id: string;
@@ -56,9 +58,22 @@ export const DataProvider = ({ children }: DataProviderProps) => {
     const [data, setData] = useState<Job[]>([]); // dari null jadi []
 
     useEffect(() => {
-        axios
-            .get("http://127.0.0.1:8000/api/job-postings")
-            .then((res) => {
+        const fetchJobPostings = async () => {
+            try {
+                const token = getToken();
+                const user = getUserData();
+                
+                let url = "http://127.0.0.1:8000/api/job-postings";
+                let headers: any = {};
+                
+                // If user is logged in and not a company, use user-specific endpoint
+                if (token && user && user.role !== 'company' && user.user_id) {
+                    console.log('User data:', user.user_id);
+                    url = `http://127.0.0.1:8000/api/user/job-postings/${user.user_id}`;
+                    headers.Authorization = `Bearer ${token}`;
+                }
+                
+                const res = await axios.get(url, { headers });
                 console.log('Full response:', res.data);
                 console.log('Response structure:', typeof res.data, Array.isArray(res.data) ? 'array' : 'object');
 
@@ -81,10 +96,12 @@ export const DataProvider = ({ children }: DataProviderProps) => {
                 }));
                 setData(jobsData);
                 console.log('Mapped jobs data:', jobsData);
-            })
-            .catch((err) => {
+            } catch (err) {
                 console.error('API Error:', err);
-            });
+            }
+        };
+        
+        fetchJobPostings();
     }, []);
 
     return (

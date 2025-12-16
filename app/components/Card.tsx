@@ -16,6 +16,7 @@ interface Job {
   created_at: string;
   updated_at: string;
   applications_count: number;
+  is_applied?: boolean;
   company: {
     id: string;
     user_id: string;
@@ -48,7 +49,7 @@ interface CardProps {
 export default function Card({ job }: CardProps) {
   const [hoveredJobDesc, setHoveredJobDesc] = useState(false);
   const [applying, setApplying] = useState(false);
-  const [applied, setApplied] = useState(job.status !== "open" ? true : false);
+  const [applied, setApplied] = useState(job.is_applied || job.status !== "open");
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({ show: false, message: '', type: 'success' });
 
   const formatSalary = (salary: string) => {
@@ -57,9 +58,27 @@ export default function Card({ job }: CardProps) {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
+    <div className={`relative bg-white border rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300 ${
+      job.is_applied 
+        ? 'border-green-400 ring-2 ring-green-200' 
+        : 'border-gray-200'
+    }`}>
+      {/* Applied Badge */}
+      {job.is_applied && (
+        <div className="absolute top-3 right-3 z-10">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-1.5 rounded-full shadow-lg flex items-center gap-2 animate-pulse">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span className="text-sm font-semibold">Applied</span>
+          </div>
+        </div>
+      )}
+      
       {/* Company Image */}
-      <div className="h-40 overflow-hidden bg-gray-100">
+      <div className={`h-40 overflow-hidden bg-gray-100 relative ${
+        job.is_applied ? 'opacity-90' : ''
+      }`}>
         {job.company.photo_url && job.company.photo_url.trim() !== '' ? (
           <img
             src={job.company.photo_url}
@@ -75,11 +94,21 @@ export default function Card({ job }: CardProps) {
             <span className="text-gray-500 text-sm">No Image</span>
           </div>
         )}
+        {/* Green overlay for applied jobs */}
+        {job.is_applied && (
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20"></div>
+        )}
       </div>
 
       <div className="p-5">
-        <h3 className="text-xl font-bold text-gray-800">{job.title}</h3>
-        <p className="text-[#FF851A] font-semibold">{job.company.name}</p>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1">
+            <h3 className="text-xl font-bold text-gray-800">{job.title}</h3>
+            <p className={`font-semibold ${
+              job.is_applied ? 'text-green-600' : 'text-[#FF851A]'
+            }`}>{job.company.name}</p>
+          </div>
+        </div>
 
         <div className="mt-3 flex items-center">
           <svg

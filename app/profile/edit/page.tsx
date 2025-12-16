@@ -52,8 +52,8 @@ export default function EditProfilePage() {
                     setExistingAvatar(profile.avatar_url || null)
                     setExistingCv(profile.cv_url || null)
                     setStats({
-                        totalApplied: profile.total_applied || 0,
-                        activeApplications: profile.active_applications || 0
+                        totalApplied: response.data.total_applied || 0,
+                        activeApplications: response.data.total_active || 0
                     })
                 }
             } catch (error) {
