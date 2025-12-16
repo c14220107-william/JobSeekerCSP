@@ -7,6 +7,8 @@ import FilterButtons from '@/app/components/admin/FilterButtons';
 import SearchBar from '@/app/components/admin/SearchBar';
 import JobPostingTable from '@/app/components/admin/JobPostingTable';
 import LoadingSpinner from '@/app/components/company/LoadingSpinner';
+import Swal from 'sweetalert2';
+import { getAllJobPostings, JobPosting as APIJobPosting } from '@/app/services/adminService';
 
 interface JobPosting {
   id: number;
@@ -39,78 +41,52 @@ export default function AdminJobPostings() {
 
   const loadData = async () => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/admin/job-postings');
-      // const data = await response.json();
-      // setJobPostings(data.data.job_postings);
+      setLoading(true);
       
-      // Mock data
-      setTimeout(() => {
-        setJobPostings([
-          {
-            id: 1,
-            title: 'Senior Software Engineer',
-            location: 'Jakarta',
-            salary: 'Rp 10.000.000 - Rp 15.000.000',
-            type: 'Full Time',
-            tenure: 'Permanent',
-            status: 'open',
-            company: {
-              id: 1,
-              company_name: 'Tech Solutions Indonesia',
-              company_city: 'Jakarta',
-              user: { name: 'PT Tech Solutions', email: 'contact@techsolutions.com' }
-            },
-            qualifications: [
-              { id: 1, name: 'Bachelor Degree' },
-              { id: 2, name: '3+ Years Experience' }
-            ],
-            applications_count: 15,
-            created_at: new Date().toISOString()
-          },
-          {
-            id: 2,
-            title: 'Digital Marketing Specialist',
-            location: 'Bandung',
-            salary: 'Rp 7.000.000 - Rp 10.000.000',
-            type: 'Full Time',
-            tenure: 'Contract',
-            status: 'open',
-            company: {
-              id: 2,
-              company_name: 'Digital Marketing Pro',
-              company_city: 'Bandung',
-              user: { name: 'PT Digital Marketing', email: 'info@digitalmarketing.com' }
-            },
-            qualifications: [
-              { id: 3, name: 'Social Media Skills' }
-            ],
-            applications_count: 23,
-            created_at: new Date().toISOString()
-          },
-          {
-            id: 3,
-            title: 'Product Manager',
-            location: 'Surabaya',
-            salary: 'Negotiable',
-            type: 'Full Time',
-            tenure: 'Permanent',
-            status: 'closed',
-            company: {
-              id: 3,
-              company_name: 'Startup Hub Indonesia',
-              company_city: 'Surabaya',
-              user: { name: 'PT Startup Hub', email: 'hello@startuphub.com' }
-            },
-            qualifications: [],
-            applications_count: 8,
-            created_at: new Date().toISOString()
+      // Fetch data from API
+      const jobPostingsData = await getAllJobPostings();
+      
+      console.log('Job postings from API:', jobPostingsData);
+      
+      // Transform data to match component structure
+      const transformedJobPostings: JobPosting[] = jobPostingsData.map((job: APIJobPosting) => ({
+        id: parseInt(job.id), // Convert UUID to number for display, or keep as string
+        title: job.title,
+        location: job.location,
+        salary: job.salary || 'Negotiable',
+        type: job.type,
+        tenure: job.tenure,
+        status: job.status,
+        company: {
+          id: job.company.id,
+          company_name: job.company.name,
+          company_city: job.company.address,
+          user: {
+            name: job.company.user.name,
+            email: job.company.user.email
           }
-        ]);
-        setLoading(false);
-      }, 500);
+        },
+        qualifications: job.qualifications || [],
+        applications_count: job.applications_count || 0,
+        created_at: job.created_at
+      }));
+      
+      console.log('Transformed job postings:', transformedJobPostings);
+      
+      setJobPostings(transformedJobPostings);
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching job postings:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: error instanceof Error ? error.message : 'Failed to load job postings. Please try again.',
+        confirmButtonColor: '#EF4444',
+        customClass: {
+          confirmButton: 'font-sans font-semibold px-6 py-2.5 rounded-lg',
+          title: 'font-sora text-2xl'
+        }
+      });
       setLoading(false);
     }
   };

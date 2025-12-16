@@ -4,22 +4,13 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AdminNavbar from '@/app/components/admin/AdminNavbar';
+import { getDashboardStats, DashboardStats } from '@/app/services/adminService';
+import Swal from 'sweetalert2';
 
 // Import Reusable Components
 import StatCard from '@/app/components/admin/StatCard';
 import LoadingSpinner from '@/app/components/company/LoadingSpinner';
 import PageHeader from '@/app/components/company/PageHeader';
-
-// TypeScript Interface untuk type safety
-interface DashboardStats {
-  total_users: number;
-  total_companies: number;
-  total_approved_companies: number;
-  total_pending_companies: number;
-  total_job_postings: number;
-  total_active_job_postings: number;
-  total_applications: number;
-}
 
 // Main Component dengan Client Side Programming concepts
 export default function AdminDashboard() {
@@ -39,26 +30,26 @@ export default function AdminDashboard() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // TODO: Replace with actual API call
-        // const response = await fetch('/api/admin/dashboard');
-        // const data = await response.json();
-        // setStats(data.data);
+        setLoading(true);
         
-        // Mock data dengan setTimeout (simulasi async API call)
-        setTimeout(() => {
-          setStats({
-            total_users: 156,
-            total_companies: 42,
-            total_approved_companies: 35,
-            total_pending_companies: 7,
-            total_job_postings: 89,
-            total_active_job_postings: 67,
-            total_applications: 324,
-          });
-          setLoading(false);
-        }, 500);
+        // Fetch real data from API
+        const data = await getDashboardStats();
+        console.log('Dashboard stats:', data);
+        
+        setStats(data);
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error!',
+          text: error instanceof Error ? error.message : 'Failed to load dashboard statistics. Please try again.',
+          confirmButtonColor: '#EF4444',
+          customClass: {
+            confirmButton: 'font-sans font-semibold px-6 py-2.5 rounded-lg',
+            title: 'font-sora text-2xl'
+          }
+        });
         setLoading(false);
       }
     };
