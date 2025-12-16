@@ -83,7 +83,7 @@ export default function JobPostingCard({ job, onDelete }: JobPostingCardProps) {
                   key={qual.id}
                   className="px-2 py-1 bg-gray-100 text-gray-700 font-sans text-xs rounded"
                 >
-                  {qual.name}
+                  {qual.skill}
                 </span>
               ))}
               {/* Conditional Rendering - tampilkan +N more jika lebih dari 3 */}

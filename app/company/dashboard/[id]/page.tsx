@@ -345,7 +345,7 @@ export default function JobPostingDetail() {
                           key={qual.id}
                           className="px-4 py-2 bg-gray-100 text-gray-700 font-sans rounded-lg font-medium"
                         >
-                          {qual.name}
+                          {qual.skill}
                         </span>
                       ))}
                     </div>

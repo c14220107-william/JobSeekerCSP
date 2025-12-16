@@ -87,10 +87,8 @@ export default function CreateJobPosting() {
   };
 
   const formatRupiah = (value: string) => {
-    // Remove non-numeric characters
     const numericValue = value.replace(/[^0-9]/g, '');
 
-    // Format with thousands separator
     if (numericValue === '') return '';
     return new Intl.NumberFormat('id-ID').format(parseInt(numericValue));
   };
@@ -270,7 +268,7 @@ export default function CreateJobPosting() {
                       onChange={() => handleQualificationToggle(qual.id)}
                       className="w-4 h-4 text-[#FFAD42] focus:ring-[#FFAD42] border-gray-300 rounded"
                     />
-                    <span className="text-sm text-gray-700">{qual.name}</span>
+                    <span className="text-sm text-gray-700">{qual.skill}</span>
                   </label>
                 ))}
               </div>

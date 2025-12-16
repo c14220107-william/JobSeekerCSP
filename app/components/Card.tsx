@@ -1,18 +1,44 @@
 import { useState } from "react";
+import { getUserData } from "@/app/apiServices";
+import { applyToJob } from "@/app/apiServices";
+import Toast from "@/app/components/Toast";
 
 interface Job {
   id: string;
+  company_id: string;
   title: string;
-  company_name: string;
-  company_city: string;
-  job_qualification: string;
-  job_type: string;
-  job_tenure: string;
-  company_image_url?: string;
-  salary_min?: number;
-  salary_max?: number;
-  job_description?: string;
-  job_status?: number;
+  location: string;
+  salary: string;
+  description: string;
+  tenure: string;
+  type: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  applications_count: number;
+  company: {
+    id: string;
+    user_id: string;
+    name: string;
+    description: string | null;
+    address: string | null;
+    is_approved: boolean;
+    photo_url: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+  qualifications: Array<{
+    id: string;
+    skill: string;
+    created_at: string;
+    updated_at: string;
+    pivot: {
+      job_id: string;
+      qualification_id: string;
+      created_at: string;
+      updated_at: string;
+    };
+  }>;
 }
 
 interface CardProps {
@@ -21,24 +47,23 @@ interface CardProps {
 
 export default function Card({ job }: CardProps) {
   const [hoveredJobDesc, setHoveredJobDesc] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [applied, setApplied] = useState(job.status !== "open" ? true : false);
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({ show: false, message: '', type: 'success' });
 
-  const formatSalary = (amount: number | undefined) => {
-    if (!amount) return "N/A";
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      maximumFractionDigits: 0,
-    }).format(amount);
+  const formatSalary = (salary: string) => {
+    if (!salary) return "N/A";
+    return salary; // Salary is already formatted as string from API
   };
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
       {/* Company Image */}
       <div className="h-40 overflow-hidden bg-gray-100">
-        {job.company_image_url && job.company_image_url.trim() !== '' ? (
+        {job.company.photo_url && job.company.photo_url.trim() !== '' ? (
           <img
-            src={job.company_image_url}
-            alt={job.company_name}
+            src={job.company.photo_url}
+            alt={job.company.name}
             className="w-full h-full object-cover"
             onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
               e.currentTarget.src =
@@ -54,7 +79,7 @@ export default function Card({ job }: CardProps) {
 
       <div className="p-5">
         <h3 className="text-xl font-bold text-gray-800">{job.title}</h3>
-        <p className="text-[#FF851A] font-semibold">{job.company_name}</p>
+        <p className="text-[#FF851A] font-semibold">{job.company.name}</p>
 
         <div className="mt-3 flex items-center">
           <svg
@@ -72,7 +97,7 @@ export default function Card({ job }: CardProps) {
             ></path>
           </svg>
           <span className="text-gray-700">
-            {formatSalary(job.salary_min)} - {formatSalary(job.salary_max)}
+            {formatSalary(job.salary)}
           </span>
         </div>
 
@@ -97,7 +122,7 @@ export default function Card({ job }: CardProps) {
               d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
             ></path>
           </svg>
-          <span className="text-gray-700">{job.company_city}</span>
+          <span className="text-gray-700">{job.location}</span>
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-2">
@@ -106,31 +131,33 @@ export default function Card({ job }: CardProps) {
               Qualifications:
             </h4>
             <div className="flex flex-wrap gap-1 mt-1">
-              {String(job.job_qualification)
-                .split(",")
-                .map((qual, index) => (
+              {job.qualifications && job.qualifications.length > 0 ? (
+                job.qualifications.map((qual) => (
                   <span
-                    key={index}
+                    key={qual.id}
                     className="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded"
                   >
-                    {qual.trim()}
+                    {qual.skill}
                   </span>
-                ))}
+                ))
+              ) : (
+                <span className="text-gray-500 text-xs">No qualifications specified</span>
+              )}
             </div>
           </div>
 
           <div>
             <h4 className="text-sm font-semibold text-gray-700">Tenure:</h4>
-            <p className="text-sm text-gray-600">{job.job_tenure}</p>
+            <p className="text-sm text-gray-600">{job.tenure}</p>
           </div>
 
           <div>
             <h4 className="text-sm font-semibold text-gray-700">Type:</h4>
             <p
-              className={`text-sm ${job.job_type === "Remote" ? "text-green-600" : "text-blue-600"
+              className={`text-sm ${job.type === "Remote" ? "text-green-600" : "text-blue-600"
                 }`}
             >
-              {job.job_type}
+              {job.type}
             </p>
           </div>
         </div>
@@ -160,20 +187,48 @@ export default function Card({ job }: CardProps) {
 
           {hoveredJobDesc && (
             <div className="absolute bottom-full left-0 mb-2 bg-black text-white text-xs p-3 rounded-lg shadow-lg w-64 z-10">
-              <p>{job.job_description}</p>
+              <p>{job.description}</p>
               <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black"></div>
             </div>
           )}
         </div>
 
-        {job.job_status == 1 ? (
-          <button className="mt-4 w-full bg-[#FF851A] hover:bg-orange-600 text-white font-medium py-2 px-4 rounded transition duration-300">
-            Apply Now
+        {applied ? (
+          <button disabled className="mt-4 w-full !bg-gray-400 text-white font-medium py-2 px-4 rounded transition duration-300">
+            {job.status === 'open' ? 'Applied' : 'Closed'}
           </button>
         ) : (
-          <button className="mt-4 w-full !bg-gray-400 text-white font-medium py-2 px-4 rounded transition duration-300">
-            Closed
-          </button>
+          <>
+            <Toast show={toast.show} message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />
+            <button
+              onClick={async () => {
+                const user = getUserData();
+                if (!user || user.role !== 'user') {
+                  setToast({ show: true, message: 'Please login as a job seeker to apply', type: 'error' });
+                  return;
+                }
+
+                setApplying(true);
+                try {
+                  await applyToJob(job.id);
+                  setToast({ show: true, message: 'Application submitted!', type: 'success' });
+                  setApplied(true);
+                } catch (err) {
+                  setToast({ show: true, message: err instanceof Error ? err.message : 'Failed to apply', type: 'error' });
+                } finally {
+                  setApplying(false);
+                }
+              }}
+              className="mt-4 w-full bg-[#FF851A] hover:bg-orange-600 text-white font-medium py-2 px-4 rounded transition duration-300 flex items-center justify-center"
+              disabled={applying}
+            >
+              {applying ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              ) : (
+                'Apply Now'
+              )}
+            </button>
+          </>
         )}
       </div>
     </div>
