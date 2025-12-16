@@ -193,11 +193,9 @@ export default function CreateJobPosting() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFAD42] focus:border-transparent"
                 >
                   <option value="">Select Type</option>
-                  <option value="Full Time">Full Time</option>
-                  <option value="Part Time">Part Time</option>
-                  <option value="Contract">Contract</option>
-                  <option value="Internship">Internship</option>
-                  <option value="Freelance">Freelance</option>
+                  <option value="Remote">Remote</option>
+                  <option value="Onsite">Onsite</option>
+                  <option value="Hybrid">Hybrid</option>
                 </select>
               </div>
 
@@ -205,16 +203,20 @@ export default function CreateJobPosting() {
                 <label htmlFor="tenure" className="block text-sm font-semibold text-gray-700 mb-2">
                   Tenure <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <select
                   id="tenure"
                   name="tenure"
                   value={formData.tenure}
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFAD42] focus:border-transparent"
-                  placeholder="e.g. Permanent, 6 months"
-                />
+                >
+                  <option value="">Select Tenure</option>
+                  <option value="Full-time">Full-time</option>
+                  <option value="Part-Time">Part-Time</option>
+                  <option value="Contract">Contract</option>
+                  <option value="Internship">Internship</option>
+                </select>
               </div>
             </div>
 
