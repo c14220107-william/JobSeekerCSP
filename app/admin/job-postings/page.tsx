@@ -48,9 +48,9 @@ export default function AdminJobPostings() {
       
       console.log('Job postings from API:', jobPostingsData);
       
-      // Transform data to match component structure
+     
       const transformedJobPostings: JobPosting[] = jobPostingsData.map((job: APIJobPosting) => ({
-        id: parseInt(job.id), // Convert UUID to number for display, or keep as string
+        id: parseInt(job.id), 
         title: job.title,
         location: job.location,
         salary: job.salary || 'Negotiable',

@@ -16,7 +16,7 @@ export default function CompanyNavbar() {
       router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
-      // Still redirect even if API fails
+    
       router.push('/');
     }
   };

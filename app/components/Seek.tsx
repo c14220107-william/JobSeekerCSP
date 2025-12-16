@@ -27,6 +27,16 @@ export default function Seek() {
     setTimeout(() => setLoading(false), 500); // loading delay
   };
 
+  const getStorageUrl = (path: string | undefined | null): string | null => {
+    if (!path) return null;
+    // If already full URL, return as is
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    // Convert storage path to URL
+    return `http://10.108.128.74:8000${path}`;
+  };
+
   const hasMoreJobs = displayedJobs.length < allJobs.length;
 
   return (
