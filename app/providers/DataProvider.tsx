@@ -63,13 +63,13 @@ export const DataProvider = ({ children }: DataProviderProps) => {
                 const token = getToken();
                 const user = getUserData();
                 
-                let url = "http://127.0.0.1:8000/api/job-postings";
+                let url = "http://172.22.83.182:8000/api/job-postings";
                 let headers: any = {};
                 
                 // If user is logged in and not a company, use user-specific endpoint
                 if (token && user && user.role !== 'company' && user.user_id) {
                     console.log('User data:', user.user_id);
-                    url = `http://127.0.0.1:8000/api/user/job-postings/${user.user_id}`;
+                    url = `http://172.22.83.182:8000/api/user/job-postings/${user.user_id}`;
                     headers.Authorization = `Bearer ${token}`;
                 }
                 
