@@ -1,6 +1,6 @@
 interface AvatarUploadProps {
     avatarPreview: string | null
-    existingAvatar?: string | null
+        existingAvatar?: string | null
     onAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     size?: 'small' | 'medium' | 'large'
 }
@@ -30,13 +30,24 @@ export default function AvatarUpload({ avatarPreview, existingAvatar, onAvatarCh
         large: 'w-6 h-6'
     }
 
+    // Helper function - Convert Laravel storage path to full URL
+    const getStorageUrl = (path: string | undefined | null): string | null => {
+        if (!path) return null;
+        // If already full URL, return as is
+        if (path.startsWith('http://') || path.startsWith('https://')) {
+            return path;
+        }
+        // Convert storage path to URL
+        return `http://10.108.128.74:8000${path}`;
+    };
+
     return (
         <div className="relative inline-block">
             <div className={`${sizeClasses[size]} rounded-full overflow-hidden border-4 border-white shadow-lg`}>
                 {avatarPreview ? (
                     <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
-                ) : existingAvatar ? (
-                    <img src={existingAvatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : getStorageUrl(existingAvatar) ? (
+                    <img src={getStorageUrl(existingAvatar)!} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
                         <svg className={`${iconSizes[size]} text-white`} fill="currentColor" viewBox="0 0 20 20">

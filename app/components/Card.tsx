@@ -57,6 +57,16 @@ export default function Card({ job }: CardProps) {
     return salary; // Salary is already formatted as string from API
   };
 
+  const getStorageUrl = (path: string | undefined | null): string | null => {
+    if (!path) return null;
+    // If already full URL, return as is
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    // Convert storage path to URL
+    return `http://10.108.128.74:8000${path}`;
+  };
+
   return (
     <div className={`relative bg-white border rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300 ${
       job.is_applied 
@@ -79,9 +89,9 @@ export default function Card({ job }: CardProps) {
       <div className={`h-40 overflow-hidden bg-gray-100 relative ${
         job.is_applied ? 'opacity-90' : ''
       }`}>
-        {job.company.photo_url && job.company.photo_url.trim() !== '' ? (
+        {getStorageUrl(job.company.photo_url) ? (
           <img
-            src={job.company.photo_url}
+            src={getStorageUrl(job.company.photo_url)!}
             alt={job.company.name}
             className="w-full h-full object-cover"
             onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {

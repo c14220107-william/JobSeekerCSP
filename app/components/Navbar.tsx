@@ -2,21 +2,56 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { getUserData, logoutUser, isUserLoggedIn } from '@/app/apiServices';
+import { getUserData, logoutUser, isUserLoggedIn, getUserProfile } from '@/app/apiServices';
 import UserDropdown from './UserDropdown';
 
 const NavbarComponent = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<{ full_name: string; email: string; role?: string } | null>(null);
+  const [user, setUser] = useState<{ full_name: string; email: string; role?: string; avatar_url?: string; photo_url?: string } | null>(null);
   const pathname = usePathname();
   const router = useRouter();
 
+  // Helper function - Convert Laravel storage path to full URL
+  const getStorageUrl = (path: string | undefined | null): string | null => {
+    if (!path) return null;
+    // If already full URL, return as is
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    // Convert storage path to URL
+    return `http://10.108.128.74:8000${path}`;
+  };
+
   useEffect(() => {
-    const checkUser = () => {
+    const checkUser = async () => {
       if (isUserLoggedIn()) {
         const userData = getUserData();
-        console.log('Navbar - User data from localStorage:', userData);
+        
+        // Fetch fresh profile data from backend if avatar_url is missing
+        if (!userData?.avatar_url && !userData?.photo_url) {
+          try {
+            const profileResponse = await getUserProfile();
+            
+            if (profileResponse.success && profileResponse.data) {
+              const profile = profileResponse.data.profile || profileResponse.data;
+              // Update localStorage with avatar_url
+              const updatedUser = {
+                ...userData,
+                avatar_url: profile.avatar_url,
+                photo_url: profile.photo_url,
+                full_name: profile.full_name || userData.full_name
+              };
+              localStorage.setItem('user', JSON.stringify(updatedUser));
+              setUser(updatedUser);
+              return;
+            }
+          } catch (error) {
+            console.error('Failed to fetch profile:', error);
+          }
+        }
+        
         setUser(userData);
       } else {
         setUser(null);
@@ -113,8 +148,20 @@ const NavbarComponent = () => {
           <>
             <div className="relative group">
               <button className="flex items-center gap-2 text-white font-semibold px-4 py-2 rounded-lg hover:bg-white/10 transition">
-                <div className="w-10 h-10 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">{user.full_name.charAt(0).toUpperCase()}</span>
+                <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                  {getStorageUrl(user.avatar_url || user.photo_url) ? (
+                    <Image
+                      src={getStorageUrl(user.avatar_url || user.photo_url)!}
+                      alt={`${user.full_name} profile picture`}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">{user.full_name.charAt(0).toUpperCase()}</span>
+                    </div>
+                  )}
                 </div>
                 <span>{user.full_name}</span>
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -221,8 +268,20 @@ const NavbarComponent = () => {
               {user ? (
                 <div className="w-full">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">{user.full_name.charAt(0).toUpperCase()}</span>
+                    <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                      {getStorageUrl(user.avatar_url || user.photo_url) ? (
+                        <Image
+                          src={getStorageUrl(user.avatar_url || user.photo_url)!}
+                          alt={`${user.full_name} profile picture`}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center">
+                          <span className="text-white font-bold text-lg">{user.full_name.charAt(0).toUpperCase()}</span>
+                        </div>
+                      )}
                     </div>
                     <span className="text-white font-semibold">
                       Welcome, {user.full_name}

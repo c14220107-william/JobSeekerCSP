@@ -25,6 +25,15 @@ export default function EditProfilePage() {
     const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
         show: false, message: '', type: 'success'
     })
+    const getStorageUrl = (path: string | undefined | null): string | null => {
+        if (!path) return null;
+        // If already full URL, return as is
+        if (path.startsWith('http://') || path.startsWith('https://')) {
+        return path;
+        }
+        // Convert storage path to URL
+        return `http://10.108.128.74:8000${path}`;
+    };
 
     useEffect(() => {
         const user = getUserData()
