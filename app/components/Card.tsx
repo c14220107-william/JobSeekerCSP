@@ -89,21 +89,6 @@ export default function Card({ job }: CardProps) {
       <div className={`h-40 overflow-hidden bg-gray-100 relative ${
         job.is_applied ? 'opacity-90' : ''
       }`}>
-        {getStorageUrl(job.company.photo_url) ? (
-          <img
-            src={getStorageUrl(job.company.photo_url)!}
-            alt={job.company.name}
-            className="w-full h-full object-cover"
-            onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-              e.currentTarget.src =
-                "https://via.placeholder.com/400x200?text=Company+Logo";
-            }}
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-200">
-            <span className="text-gray-500 text-sm">No Image</span>
-          </div>
-        )}
         {/* Green overlay for applied jobs */}
         {job.is_applied && (
           <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20"></div>

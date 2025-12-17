@@ -148,49 +148,7 @@ export default function EditCompanyProfilePage() {
                 <div className="container mx-auto max-w-4xl">
                     <form onSubmit={handleSubmit} className="space-y-8">
                         {/* Company Photo Section */}
-                        <div className="bg-white rounded-2xl shadow-lg p-8">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Company Photo</h2>
-                            <div className="flex flex-col items-center space-y-4">
-                                <div className="relative">
-                                    <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 border-4 border-orange-200">
-                                        {photoPreview ? (
-                                            <img
-                                                src={photoPreview}
-                                                alt="Company preview"
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : existingPhoto ? (
-                                            <img
-                                                src={existingPhoto}
-                                                alt="Current company photo"
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gray-300">
-                                                <svg className="w-12 h-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                                </svg>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <label className="absolute bottom-0 right-0 bg-orange-500 hover:bg-orange-600 text-white rounded-full p-2 cursor-pointer transition">
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handlePhotoChange}
-                                            className="hidden"
-                                        />
-                                    </label>
-                                </div>
-                                <p className="text-sm text-gray-600 text-center">
-                                    Click the edit icon to change your company photo<br />
-                                    <span className="text-xs">Max size: 5MB, Formats: JPG, PNG, GIF</span>
-                                </p>
-                            </div>
-                        </div>
+                       
 
                         {/* Company Information Section */}
                         <div className="bg-white rounded-2xl shadow-lg p-8">
