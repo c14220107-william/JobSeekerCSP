@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://10.108.128.74:8000/api';
+const API_BASE_URL = 'http://172.22.83.182:8000/api';
 
 // Types
 export interface Qualification {
