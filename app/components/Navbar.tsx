@@ -21,7 +21,7 @@ const NavbarComponent = () => {
       return path;
     }
     // Convert storage path to URL
-    return `http://10.108.128.74:8000${path}`;
+    return `http://172.22.83.182:8000${path}`;
   };
 
   useEffect(() => {

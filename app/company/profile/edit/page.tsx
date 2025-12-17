@@ -58,7 +58,7 @@ export default function EditCompanyProfilePage() {
         }
 
         fetchProfile()
-    }, [router])
+    }, [])
 
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -80,8 +80,10 @@ export default function EditCompanyProfilePage() {
     }
 
     const handleDataChange = (field: 'name' | 'description' | 'address', value: string) => {
-        setProfileData({ ...profileData, [field]: value })
-        setHasChanges(value !== originalData[field] || photoFile !== null)
+        const newData = { ...profileData, [field]: value }
+        setProfileData(newData)
+        const dataChanged = Object.keys(newData).some(key => newData[key as keyof typeof newData] !== originalData[key as keyof typeof originalData])
+        setHasChanges(dataChanged || photoFile !== null)
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -92,10 +94,27 @@ export default function EditCompanyProfilePage() {
             if (profileData.name) formData.append('company_name', profileData.name)
             if (profileData.description) formData.append('description', profileData.description)
             if (profileData.address) formData.append('address', profileData.address)
+            if (photoFile) formData.append('photo_url', photoFile)
     
             await updateCompanyProfile(formData)
             setToast({ show: true, message: 'Company profile updated successfully!', type: 'success' })
-            setTimeout(() => router.push('/company/profile/edit'), 1500)
+            setPhotoFile(null)
+            setPhotoPreview(null)
+            setHasChanges(false)
+            
+            // Refresh profile data
+            const response = await getCompanyProfile()
+            if (response.data && response.data.company) {
+                const company = response.data.company
+                const data = {
+                    name: company.name || '',
+                    description: company.description || '',
+                    address: company.address || ''
+                }
+                setProfileData(data)
+                setOriginalData(data)
+                setExistingPhoto(company.photo_url || null)
+            }
         } catch (error) {
             setToast({ show: true, message: error instanceof Error ? error.message : 'Failed to update company profile', type: 'error' })
         } finally {
