@@ -34,7 +34,7 @@ export default function Seek() {
       return path;
     }
     // Convert storage path to URL
-    return `http://10.108.128.74:8000${path}`;
+    return `http://127.0.0.1:8000${path}`;
   };
 
   const hasMoreJobs = displayedJobs.length < allJobs.length;

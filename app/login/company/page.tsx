@@ -136,7 +136,7 @@ function UserLoginPageContent() {
 
                 // Redirect to company dashboard after delay to show toast
                 setTimeout(() => {
-                    router.push('/company/dashboard')
+                    router.push('/company/profile/edit')
                 }, 1500)
             } catch (error: any) {
                 // Handle 403 response for unapproved company
