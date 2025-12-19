@@ -56,7 +56,6 @@ export default function AdminCompanies() {
       console.log('Pending companies from API:', pendingRes);
       console.log('Approved companies from API:', approvedRes);
 
-      // Transform data to match component structure - filter out users without company data
       const transformedPending: Company[] = pendingRes
         .filter((user: CompanyUser) => user.company != null)
         .map((user: CompanyUser) => {

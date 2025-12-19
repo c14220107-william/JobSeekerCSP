@@ -64,7 +64,7 @@ export default function Card({ job }: CardProps) {
       return path;
     }
     // Convert storage path to URL
-    return `http://10.108.128.74:8000${path}`;
+    return `http://127.0.0.1:8000${path}`;
   };
 
   return (
@@ -85,15 +85,7 @@ export default function Card({ job }: CardProps) {
         </div>
       )}
       
-      {/* Company Image */}
-      <div className={`h-40 overflow-hidden bg-gray-100 relative ${
-        job.is_applied ? 'opacity-90' : ''
-      }`}>
-        {/* Green overlay for applied jobs */}
-        {job.is_applied && (
-          <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20"></div>
-        )}
-      </div>
+      
 
       <div className="p-5">
         <div className="flex items-start justify-between gap-2">
