@@ -3,15 +3,13 @@ import FileUpload from './FileUpload'
 
 interface ProfileFormCardProps {
     age: string
-    qualifications: string
     onAgeChange: (value: string) => void
-    onQualificationsChange: (value: string) => void
     cvFile: File | null
     existingCv?: string | null
     onCvChange: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
-export default function ProfileFormCard({ age, qualifications, onAgeChange, onQualificationsChange, cvFile, existingCv, onCvChange }: ProfileFormCardProps) {
+export default function ProfileFormCard({ age, onAgeChange, cvFile, existingCv, onCvChange }: ProfileFormCardProps) {
     return (
         <div className="bg-white rounded-2xl shadow-lg p-8">
             <div className="flex items-center gap-3 mb-6">
@@ -51,20 +49,7 @@ export default function ProfileFormCard({ age, qualifications, onAgeChange, onQu
                     placeholder="Choose PDF"
                 />
 
-                <div className="md:col-span-2">
-                    <FormInput
-                        label="Qualifications"
-                        type="text"
-                        value={qualifications}
-                        onChange={(e) => onQualificationsChange(e.target.value)}
-                        placeholder="e.g., Bachelor's Degree in Computer Science, AWS Certified"
-                        icon={
-                            <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        }
-                    />
-                </div>
+                
             </div>
         </div>
     )

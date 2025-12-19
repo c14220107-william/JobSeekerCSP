@@ -10,8 +10,8 @@ import BioCard from '@/app/components/profile/BioCard'
 
 export default function EditProfilePage() {
     const router = useRouter()
-    const [profileData, setProfileData] = useState({ age: '', bio: '', qualifications: '' })
-    const [originalData, setOriginalData] = useState({ age: '', bio: '', qualifications: '' })
+    const [profileData, setProfileData] = useState({ age: '', bio: ''})
+    const [originalData, setOriginalData] = useState({ age: '', bio: ''})
     const [userInfo, setUserInfo] = useState({ name: '', email: '' })
     const [stats, setStats] = useState({ totalApplied: 0, activeApplications: 0 })
     const [cvFile, setCvFile] = useState<File | null>(null)
@@ -54,7 +54,7 @@ export default function EditProfilePage() {
                     const data = {
                         age: profile.age || '',
                         bio: profile.bio || '',
-                        qualifications: profile.qualifications || ''
+                      
                     }
                     setProfileData(data)
                     setOriginalData(data)
@@ -102,7 +102,7 @@ export default function EditProfilePage() {
         }
     }
 
-    const handleDataChange = (field: 'age' | 'bio' | 'qualifications', value: string) => {
+    const handleDataChange = (field: 'age' | 'bio' , value: string) => {
         setProfileData({ ...profileData, [field]: value })
         setHasChanges(value !== originalData[field] || avatarFile !== null || cvFile !== null)
     }
@@ -114,7 +114,6 @@ export default function EditProfilePage() {
             const formData = new FormData()
             if (profileData.age) formData.append('age', profileData.age)
             if (profileData.bio) formData.append('bio', profileData.bio)
-            if (profileData.qualifications) formData.append('qualifications', profileData.qualifications)
             if (cvFile) formData.append('cv', cvFile)
             if (avatarFile) formData.append('avatar', avatarFile)
             await updateUserProfile(formData)
@@ -167,9 +166,7 @@ export default function EditProfilePage() {
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <ProfileFormCard
                                     age={profileData.age}
-                                    qualifications={profileData.qualifications}
                                     onAgeChange={(value) => handleDataChange('age', value)}
-                                    onQualificationsChange={(value) => handleDataChange('qualifications', value)}
                                     cvFile={cvFile}
                                     existingCv={existingCv}
                                     onCvChange={handleCvChange}
