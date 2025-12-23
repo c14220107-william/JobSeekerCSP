@@ -13,7 +13,7 @@ export default function Footer() {
             the easiest way to career opportunities starts here.
           </p>
           <p className="font-sora text-[14px] text-black">
-            © 2025 Crisnanda Agung Salvatoni
+            © 2025 Client Side Programming
           </p>
         </div>
         <div className="flex flex-col !items-end">

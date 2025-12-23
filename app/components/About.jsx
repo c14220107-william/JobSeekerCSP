@@ -19,7 +19,7 @@ export default function About() {
         <br />
         <p className="lg:text-right text-lg text-gray-300 font-semibold font-sora">
           Under the leadership of our{" "}
-          <span className="text-white">CEO Crisnanda</span>,{" "}
+          <span className="text-white">handsome CEO</span>,{" "}
           <span className="text-[#FF851A]">Bright!</span> was founded to help
           individuals unlock their{" "}
           <span className="text-[#FF851A]">brightest</span> potential and{" "}
