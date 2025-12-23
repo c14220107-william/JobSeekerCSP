@@ -71,7 +71,7 @@ export default function AdminApplications() {
             id: app.id,
             seeker: {
               id: app.seeker?.id || 0,
-              name: app.seeker?.user?.name || app.seeker?.full_name || 'N/A',
+              name: app.seeker?.user?.name || 'N/A',
               email: app.seeker?.user?.email || 'N/A',
               profile: {
                 phone: app.seeker?.phone,

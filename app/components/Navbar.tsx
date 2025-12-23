@@ -41,7 +41,8 @@ const NavbarComponent = () => {
                 ...userData,
                 avatar_url: profile.avatar_url,
                 photo_url: profile.photo_url,
-                full_name: profile.full_name || userData.full_name
+                full_name: profile.full_name || userData?.full_name || 'User',
+                email: userData?.email || ''
               };
               localStorage.setItem('user', JSON.stringify(updatedUser));
               setUser(updatedUser);
