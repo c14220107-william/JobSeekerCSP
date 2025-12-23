@@ -3,6 +3,7 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import axios from "axios";
 import { getUserData, getToken } from "@/app/apiServices";
+import ErrorModal from "@/app/components/ErrorModal";
 
 interface Job {
     id: string;
@@ -55,7 +56,9 @@ interface DataProviderProps {
 }
 
 export const DataProvider = ({ children }: DataProviderProps) => {
-    const [data, setData] = useState<Job[]>([]); // dari null jadi []
+    const [data, setData] = useState<Job[]>([]);
+    const [showError, setShowError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     useEffect(() => {
         const fetchJobPostings = async () => {
@@ -96,8 +99,14 @@ export const DataProvider = ({ children }: DataProviderProps) => {
                 }));
                 setData(jobsData);
                 console.log('Mapped jobs data:', jobsData);
-            } catch (err) {
+            } catch (err: any) {
                 console.error('API Error:', err);
+                
+                // Check if it's a network error
+                if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error') || !navigator.onLine) {
+                    setErrorMessage('Backend server is currently unavailable because the Laravel server is not running. The backend application has not been deployed and only the frontend is available.');
+                    setShowError(true);
+                }
             }
         };
         
@@ -105,9 +114,16 @@ export const DataProvider = ({ children }: DataProviderProps) => {
     }, []);
 
     return (
-        <GlobalContext.Provider value={{ data, setData }}>
-            {children}
-        </GlobalContext.Provider>
+        <>
+            <ErrorModal
+                show={showError}
+                message={errorMessage}
+                onClose={() => setShowError(false)}
+            />
+            <GlobalContext.Provider value={{ data, setData }}>
+                {children}
+            </GlobalContext.Provider>
+        </>
     );
 };
 
